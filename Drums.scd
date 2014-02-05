@@ -127,11 +127,12 @@ d = Pseq ([0, 1, 0, 1, 0, 0, 1]);
 e = Pseq ([0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0]);
 f = Pseq ([0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1]);
 
-p.stream = Ppar([a,b,c,d,e,f].collect { |pattern, i|
+p.stream = Ppar([a].collect { |pattern, i|
 Pn(Pbind(
 		\instrument, [\kick, \snare, \hat, \tom, \brus, \brus2].at(i),
 		\dur, 0.50,
-		\amp, 0.1,
+		\amp, 0.05,
+		\reson, 0,
 		\noteOrRest, Pif(pattern > 0, 1, Rest)
 	),inf);
 	}
@@ -154,13 +155,14 @@ Pfxb(p, \reson, \out, 0).play;
 
 
 (
-SynthDef(\kick, {|out = 0, amp = 0, pan|
+SynthDef(\kick, {|out = 0, amp = 0, pan, reson|
 	var pop, env;
 	env = EnvGen.kr(Env.perc(0.01, 0.1, 1, -5), 1, doneAction:2);
-	pop = Blip.ar(50+LFNoise0.kr(10,30),1,0.1);
+	pop = Blip.ar(50+LFNoise0.kr(10,30),1,0.1).distort;
 	pop = Resonz.ar(Decay.ar(pop,TRand.ar(0.1,0.11,pop)),Demand.ar(pop,0,Dseq({ 10.rand+1 })),
 		mul:Demand.ar(pop,0,Dseq({ exprand(0.5,0.67) })));
 	pop = LeakDC.ar(pop*50,TRand.ar(0.9,0.9995,pop),0.5);
+
 	Out.ar(out, Pan2.ar(pop*env, pan, amp));
 }).add;
 

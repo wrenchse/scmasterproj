@@ -1,6 +1,37 @@
 
 
 
+(
+
+SynthDef(\reson, { | freqs = #[1] , pitches = 0, out = 0 |
+	var in, delay, dTime, pit, spela, ut;
+
+	pit = (freqs+pitches);
+	dTime = (48000/(pit).midicps);
+
+	in = Mix.ar(In.ar(20,4))*0.5;
+
+//	In.ar(20+(i%3),1) Kan bytas ut mot in i TwoTuben.
+
+	spela = dTime.collect { | item, i, sound|
+		sound = TwoTube.ar(Dust(10), LinRand(1,-1),0.9 ,item/4, item/4);
+		FoaPanB.ar(sound,LFSaw.ar(0.05*(i/5+0.1), mul: pi), LFSaw.ar(0.05*(i/5+0.1), mul: pi))}.sum;
+
+	Out.ar(~reverbSend, spela*0.2);
+
+	ut = FoaDecode.ar(spela, ~decoder);
+
+	Out.ar(out, ut);
+}).add;
+)
+
+
+
+Synth.new(\reson);
+
+
+
+
 
 
 
@@ -18,7 +49,7 @@ SynthDef(\reson, { | freqs =#[50,54,57,59,62] , pitches = 0, out = 0 |
     //delay = CombC.ar(delay, 0.2, dTime, fb, 10)*vol;
 
 	//LocalOut.ar(LeakDC.ar(delay*0.8));
-	Out.ar(~ambiBus,delay*0.2);
+	Out.ar(0,delay*0.2);
 
 },[0.5,2]).add;
 )
@@ -26,43 +57,6 @@ SynthDef(\reson, { | freqs =#[50,54,57,59,62] , pitches = 0, out = 0 |
 )
 
 
-
-
-
-
-
-
-
-
-(
-~decoder = FoaDecoderKernel.newSpherical;
-)
-(
-
-r = {
-	var in, out = 0, delay, dTime, pit, freqs =#[50,54,57,59,62] , pitches = 0, fb = 1, vol = 0.5;
-
-	pit = (freqs+pitches);
-	dTime = (48000/(pit).midicps);
-
-	in = Dust.ar(2);
-
-//	delay = SplayAz.ar(8,TwoTube.ar(in, LinRand(1,-1),0.998 ,dTime/4, dTime/4),1);
-
-	delay = TwoTube.ar(in, LinRand(1,-1),0.998 ,dTime/4, dTime/4);
-
-	delay = FoaEncode.ar([delay], FoaEncoderMatrix.newOmni);
-
-	delay = FoaTransform.ar(delay,'push',Saw.kr(1,pi));
-
-
-	//delay = CombC.ar(in, 0.2, dTime, fb, 10)*vol;
-
-	//LocalOut.ar(LeakDC.ar(delay*0.8));
-	Out.ar(delay,FoaDecode.ar(delay, ~decoder));
-}.play;
-
-)
 
 
 
@@ -74,21 +68,25 @@ r = {
 
 (
 
+
 r = {
-	var in, out = 0, dTime, pit, freqs =#[50,54,57,59,62] , pitches = 0, spela;
+	var in, out = 0, dTime, pit, freqs =#[50,54,57,59,62] , pitches = 0, spela, ut;
 
 	pit = (freqs+pitches);
 	dTime = (48000/(pit).midicps);
 
-//	in = Dust.ar(2);
+	//in = Dust.ar(2);
 
 	spela = dTime.collect { | item, i, sound|
-		sound = TwoTube.ar(Dust.ar(1), LinRand(1,-1),0.999 ,item/4, item/4);
-		FoaPanB.ar(sound,Saw.kr(0.1*(i+1), mul: pi), Saw.kr(0.1*(i+1), mul: pi))}.sum;
+		sound = TwoTube.ar(Dust.ar(0.2), LinRand(1,-1),0.999 ,item/4, item/4);
+		FoaPanB.ar(sound,LFSaw.ar(0.05*(i/2+0.1), mul: pi), LFSaw.ar(0.5*(i/2+0.1), mul: pi))}.sum;
 
-	spela = FoaDecode.ar(spela, ~decoder);
+	Out.ar(~reverbSend, spela);
 
-	Out.ar(out, spela*0.5);
+	ut = FoaDecode.ar(spela, ~decoder);
+
+	Out.ar(out, ut);
+//	Out.ar(out, spela);
 }.play;
 
 )
