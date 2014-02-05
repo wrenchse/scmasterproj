@@ -5,12 +5,12 @@
 
 (
 Synth.new(\wrenchVerb, [\vol, 1]);
-Synth.new(\reson, [\pitches, 0]);
+//Synth.new(\reson, [\pitches, 0]);
 
 {
-	var out = 0, ut, freq = MouseY.kr(10,40).midicps, freq1 = freq, mod = MouseX.kr(0.1,5);
+	var out = 0, ut, freq = MouseY.kr(10,40).midicps, freq1 = freq, mod = MouseX.kr(0.1,5), drone1, drone2;
 
-	d = 4.collect{
+	drone1 = 4.collect{
 		arg i;
 		freq1 = freq1 * 2;
 		[SinOscFB.ar(freq1/1.5, SinOsc.kr(0.04*(i+1)/5,-1,mod,1),0.3/(i+1)/3),
@@ -20,7 +20,7 @@ Synth.new(\reson, [\pitches, 0]);
 
 	freq1 = freq * 2;
 
-	p = 4.collect {
+	drone2 = 4.collect {
 		arg i;
 		freq1 = freq1 * 2;
 		Resonz.ar(
@@ -30,23 +30,23 @@ Synth.new(\reson, [\pitches, 0]);
 			0.4,5)
 	};
 
-	d = FoaEncode.ar(d, FoaEncoderMatrix.newPanto);
-	d = FoaTransform.ar(d,'rotate',LFSaw.ar(0.1,mul: pi));
+	drone1 = FoaEncode.ar(drone1, FoaEncoderMatrix.newPanto);
+	drone1 = FoaTransform.ar(drone1,'rotate',LFSaw.ar(0.1,mul: pi));
 
-	p = FoaEncode.ar(p, FoaEncoderMatrix.newPanto);
-	p = FoaTransform.ar(p,'rotate',LFSaw.ar(0.1,mul: -pi));
+	drone2 = FoaEncode.ar(drone2, FoaEncoderMatrix.newPanto);
+	drone2 = FoaTransform.ar(drone2,'rotate',LFSaw.ar(0.1,mul: -pi));
 
 	//ut = Mix.new(d+p)*0.6;
 	//o = BLowPass4.ar(o, MouseX.kr(20,20000,\exponential), 2);
 	//o = CombN.ar(o, 0.2, 0.2, 3);
 
-	d = FoaDecode.ar(d+p, ~decoder);
+	d = FoaDecode.ar(drone1+drone2, ~decoder);
 
-	Out.ar(out, d);
+	Out.ar(out, d*0.2);
 
 	Out.ar(20, d*0);
 
-	Out.ar(~reverbSend, d*0.5);
+	Out.ar(~reverbSend, d*0.2);
 
 
 }.play
@@ -80,7 +80,7 @@ SynthDef("carrier", { arg inbus = 2, outbus = 0, freq = 440, carPartial = 1, ind
 
 	o = FoaEncode.ar(o,FoaEncoderMatrix.newOmni);
 	o = FoaTransform.ar(o,'focus',pi/4,LFSaw.ar(0.1*speed,mul: pi));
-	o = FoaDecode.ar(o,~decoder, 0.4);
+	o = FoaDecode.ar(o,~decoder, 0.7);
 
 	Out.ar(~reverbSend, o);
 	Out.ar(0, o )

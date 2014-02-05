@@ -137,11 +137,12 @@ t = Task({
 
 	loop({
 		q.value;
-		x.release(2);
-if(		0.9.coin,{
+		x.release;
+if(		1.coin,{
 		a = [up,down].wchoose([u,d].normalizeSum);
 		a.value;
-		x = Synth(\default, [freq: p[j%p.size].value.midicps]);
+			x = Synth.new(\restrument, [\freqs, p[j%p.size].value, \pany, (2pi.rand-pi)]);
+//			x = Synth(\default, [freq: p[j%p.size].value.midicps]);
 		//(d+" "+u).postln;
 		});
 
@@ -151,7 +152,8 @@ t.start;
 )
 t.stop; x.release(2);
 
-
+x = Synth.new(\restrument, [\freqs, 43]);
+x.release;
 
 
 

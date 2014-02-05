@@ -4,6 +4,7 @@
 ~fftsize=2048;
 ~reverbSend = Bus.audio(s, 10);
 
+
 s.waitForBoot{
 	s.options.sampleRate= 48000;
 	{
@@ -25,6 +26,24 @@ s.waitForBoot{
 	}.fork;
 
 
+
+
+	// SPECIFY DECODER
+
+	//~decoder = FoaDecoderKernel.newSpherical;
+	//~decoder = FoaDecoderMatrix.newQuad;
+	//~decoder = FoaDecoderMatrix.newStereo;
+	//~decoder = FoaDecoderKernel.newUHJ;
+
+};
+)
+
+
+~decoder = FoaDecoderMatrix.newQuad;
+
+
+
+(
 	// ADD REVERB MODULE DEFINITION
 
 	SynthDef(\wrenchVerb, {|out, vol = 1, verb |
@@ -38,18 +57,7 @@ s.waitForBoot{
 		Out.ar(out, FoaDecode.ar(verb, ~decoder));
 	}).add;
 
-
-	// SPECIFY DECODER
-
-	~decoder = FoaDecoderKernel.newSpherical;
-	//~decoder = FoaDecoderMatrix.newQuad;
-	//~decoder = FoaDecoderMatrix.newStereo;
-	//~decoder = FoaDecoderKernel.newUHJ;
-
-};
 )
-
-
 
 
 Synth.new(\wrenchVerb)
