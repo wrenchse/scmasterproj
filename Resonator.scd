@@ -37,19 +37,19 @@ Synth.new(\reson);
 
 
 (
-SynthDef(\restrument, { | freqs = 40 , pitches = -12, out = 0, pany = pi |
+SynthDef(\restrument, { | freq = 40 , pitches = 0, out = 0, pany = pi, gate = 1 |
 	var in, env, delay, dTime, pit;
 
-	env = EnvGen.kr(Env.linen(0.05, 7, 0.5, 0.7, -4), 1, doneAction:2);
-	dTime = (48000/(freqs+pitches).midicps);
+	env = Linen.kr(gate, 0.005, 1, 2.7, 2);
+	dTime = (48000/(freq+pitches));
 
 	in = Impulse.ar(0);
 
-	delay = TwoTube.ar(in, LinRand(1,-1),0.995 ,dTime/4, dTime/4)*env;
+	delay = TwoTube.ar(in, LinRand(1,-1),0.9995 ,dTime/4, dTime/4)*env;
 	delay = FoaPanB.ar(delay,pany);
 
     //delay = CombC.ar(delay, 0.2, dTime, fb, 10)*vol;
-	Out.ar(~reverbSend, delay*0.2);
+	//Out.ar(~reverbSend, delay*0.2);
 	//LocalOut.ar(LeakDC.ar(delay*0.8));
 
 	delay = FoaDecode.ar(delay, ~decoder);

@@ -4,9 +4,11 @@
 ~fftsize=2048;
 ~reverbSend = Bus.audio(s, 10);
 
+s.options.sampleRate	= 48000;
+s.options.memSize		= 80*1024;
 
 s.waitForBoot{
-	s.options.sampleRate= 48000;
+
 	{
 		// INITIATE REVERB IMPULSE RESPONSE
 
@@ -24,22 +26,16 @@ s.waitForBoot{
 
 		irbuffers.do(_.free); // applies free to all in array -- don't need time domain data anymore, just needed spectral version
 	}.fork;
-
-
-
-
-	// SPECIFY DECODER
-
-	//~decoder = FoaDecoderKernel.newSpherical;
-	//~decoder = FoaDecoderMatrix.newQuad;
-	//~decoder = FoaDecoderMatrix.newStereo;
-	//~decoder = FoaDecoderKernel.newUHJ;
-
 };
 )
 
-
-~decoder = FoaDecoderMatrix.newQuad;
+(
+// SPECIFY DECODER
+//~decoder = FoaDecoderKernel.newSpherical;
+//~decoder = FoaDecoderMatrix.newQuad;
+//~decoder = FoaDecoderMatrix.newStereo;
+~decoder = FoaDecoderKernel.newUHJ;
+)
 
 
 
