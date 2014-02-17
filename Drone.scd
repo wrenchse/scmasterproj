@@ -5,7 +5,7 @@
 
 (
 Synth.new(\wrenchVerb, [\vol, 1]);
-//Synth.new(\reson, [\pitches, 0]);
+Synth.new(\reson, [\pitches, 0]);
 
 {
 	var out = 0, ut, freq = MouseY.kr(10,40).midicps, freq1 = freq, mod = MouseX.kr(0.1,5), drone1, drone2;
@@ -44,7 +44,7 @@ Synth.new(\wrenchVerb, [\vol, 1]);
 
 	Out.ar(out, d*0.2);
 
-	Out.ar(20, d*0);
+	Out.ar(20, d*0.4);
 
 	Out.ar(~reverbSend, d*0.2);
 

@@ -1,3 +1,5 @@
+s.options.memSize
+
 (
 //  B O O T --------------------------------------------------------------------- //
 
@@ -5,7 +7,7 @@
 ~reverbSend = Bus.audio(s, 10);
 
 s.options.sampleRate	= 48000;
-s.options.memSize		= 80*1024;
+s.options.memSize		= 5000*1024;
 
 s.waitForBoot{
 
@@ -26,6 +28,23 @@ s.waitForBoot{
 
 		irbuffers.do(_.free); // applies free to all in array -- don't need time domain data anymore, just needed spectral version
 	}.fork;
+
+	s.sync;
+	~decoder = FoaDecoderKernel.newUHJ;
+
+	s.sync;
+
+	SynthDef(\wrenchVerb, {|out, vol = 1, verb |
+		var in = In.ar(~reverbSend, 4); // Input must be B-format
+
+		verb = FoaDecode.ar(in,  FoaDecoderMatrix.newBtoA); // Decode
+		verb = ~irspectra.collect{|s, i|
+			PartConv.ar(verb[i], ~fftsize, s.bufnum, 0.3)*vol*0.1};
+		verb = FoaEncode.ar(verb, FoaEncoderMatrix.newAtoB);  // Encode
+
+		Out.ar(out, FoaDecode.ar(verb, ~decoder));
+	}).add;
+
 };
 )
 

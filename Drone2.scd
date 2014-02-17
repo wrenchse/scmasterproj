@@ -49,7 +49,7 @@ SynthDef(\droneWrench, { |
 
 	//Out.ar(20, d*0);
 
-	Out.ar(~reverbSend, (d*0.5)*revLev);
+	Out.ar(~reverbSend, (sound*1)*revLev);
 
 }).add;
 )
@@ -62,8 +62,15 @@ MIDIFunc.noteOff({arg vel, note; y.set(\gate, 0).postln });
 )
 
 
+Synth.new(\wrenchVerb, [\vol, 1]);
 (
-~decoder = FoaDecoderKernel.newSpherical;
+
+{y = Synth.new(\droneWrench, [\freq, 16.midicps, \mod, 1, \revLev, 1] )}.play
+)
+
+(
+Synth.new(\wrenchVerb, [\vol, 1]);
+~decoder = FoaDecoderMatrix.newQuad;
 )
 
 

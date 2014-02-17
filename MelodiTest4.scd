@@ -100,10 +100,10 @@ språng ned ej kvart - ters ok
 //	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	//
 Pbind(*[
 	instrument: 	\synthBygge, 			//Pstutter(5,Pseq(.[\restrument,\default],inf)),
-	dur: 			Pseed(100,~melodyDur),
+	dur: 			Pseed(101,~melodyDur),
 	degree: 		Pseed(100,~melodyNotes),
-	scale:			Scale.major,//[0, 2, 3.2, 5, 7, 9, 10],
-	stepsPerOctave: 12,
+	scale:			[0, 2, 3, 5, 7, 9, 10],
+	stepsPerOctave: 20,
 	mtranspose: 	0,
 	tempo:			1,
 	filter:			Phprand(100,2000,inf),
