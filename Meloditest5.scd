@@ -172,31 +172,16 @@ thisThread.randSeed = 0;
 	\stepsPerOctave,12
 );
 
-
-~spelaspela = Pchain(~meta1,	Ptpar([16, ~bas, 0, ~arp, 8, ~arp2, 16, ~chords, 16*2, ~melodi	])	)
+~spelaspela = Pchain(~meta1,	Ptpar([16, ~bas, 0, ~arp, 8, ~arp2, 16, ~chords, 16*2, ~melodi, 0, p, 0, ~resRoutine ])	)
 )
 
-(
 
 Synth.new(\wrenchVerb, [\vol, 1]);
+
 ~spelaspela.play;
-)
+
 
 ~spelaspela.stop;
-
-(
-ScoreClock.beginScore;
-u.play;
-ScoreClock.tempo = 100/60;
-~spelaspela.play(ScoreClock);
-~score = ScoreClock.makeScore;
-)
-// print it
-~score.score.do(_.postln);""
-
-// render to file
-~score.recordNRT("~/score.osc".standardizePath,"~/score.aiff".standardizePath);
-
 
 
 
@@ -221,10 +206,10 @@ ScoreClock.tempo = 100/60;
 //////////////////	-	-	-	-	-	-	-	-	-	-	//////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 
-u= SynthDef(\pinguPingu, { |
+SynthDef(\pinguPingu, { |
 	gate		= 1,	freq		= 120,	filtr 		= 1000,
 	res			= 1,	saw0Pulse1	= 0, 	pulseWidth	= 0.5,
-	lfo1		= 0,	lfo2		= 0,	keyFollow	= 0,
+	lfo1s		= 0.1,	lfo2s		= 0,	keyFollow	= 0,
 	amp			= 1,	pan			= 0,	delDecay 	= 0.5,
 	revAmm		= 0.1,
 
@@ -234,14 +219,16 @@ u= SynthDef(\pinguPingu, { |
 	envFilter	= #[0.01,	0.2,	1,		4	]				|
 
 
-	var syntEnv, filtEnv, sound, chorus, delay, waveForm;
+	var syntEnv, filtEnv, sound, chorus, delay, waveForm, lfo1, lfo2;
+
+	//lfo1 = SinOsc.kr(lfo1s,pi/2,0.5,1);
+	//lfo2 = LFTri.kr(lfo2s);
 
 //	-	-	-	-	-	-	-	-	-	CHOOSE WAVEFORM
-	sound = XFade2.ar (
+	sound = Select.ar (saw0Pulse1,[
 		Saw.ar	(		freq:	[freq,freq/2],	mul:	0.2),
-		Pulse.ar(		freq:	[freq,freq/2],	mul:	0.2, 	width:	pulseWidth),
-		LinLin.kr(		saw0Pulse1,0,1,-1,1);
-	);
+		Pulse.ar(		freq:	[freq,freq/2],	mul:	0.2, 	width:	pulseWidth)
+	]);
 
 //	-	-	-	-	-	-	-	-	-	ENVELOPES
 	syntEnv = EnvGen.ar(Env.adsr(*envSynth),	gate);
@@ -287,7 +274,7 @@ MIDIIn.connectAll;
 
 (
 MIDIFunc.noteOn({arg vel, note; y = Synth(\pinguPingu, [
-	\freq, note.midicps	]
+	\freq, note.midicps,\lfo1s,1	]
 	++ ~pinguPresets.at(1)
 ).postln });
 
@@ -297,8 +284,8 @@ MIDIFunc.noteOff({arg vel, note; y.set(\gate, 0).postln });
 
 
 
-
-
+w = Synth.new(\wowEffect);
+w.free;
 
 
 

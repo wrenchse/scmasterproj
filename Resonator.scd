@@ -1,29 +1,47 @@
 
-
-
 (
 
-SynthDef(\reson, { | freqs = #[50,54,57,59,62] , pitches = 0, out = 0 |
+SynthDef(\reson, { | freq = #[50,54,57,59,62] , pitches = 0, out = 0 |
 	var in, delay, dTime, pit, spela, ut;
 
-	pit = (freqs+pitches);
+	pit = (freq+pitches);
 	dTime = (48000/pit.midicps);
 
-	in = Mix.ar(In.ar(20,4))*0.25;
-
-//	In.ar(20+(i%3),1) Kan bytas ut mot in i TwoTuben.
+	in = Mix.ar(In.ar(~resonatorSend))*0.25;
 
 	spela = dTime.collect { | item, i |
 		var sound = TwoTube.ar(in, 1,0.99 ,item/4, item/4);
 		FoaPanB.ar(sound,LFSaw.ar(0.5*(i/5+0.1), mul: pi), LFSaw.ar(0.05*(i/5+0.1), mul: pi))}.sum;
 
-	Out.ar(~reverbSend, spela*0.2);
-
+	Out.ar(~reverbSend, spela*0.6);
 	ut = FoaDecode.ar(spela, ~decoder);
-
 	Out.ar(out, ut);
 }).add;
+
+
+
+
+SynthDef(\reson2, { | freq = 0 , pitches = 0, out = 0, pany = pi, gate = 1 |
+	var in, delay, dTime, pit, spela, ut, sound, env;
+
+	env = Linen.kr(gate, 0.005, 1, 2.7, 2);
+	dTime = (48000/(freq+pitches));
+
+	in = Mix.ar(In.ar(~resonatorSend))*0.25;
+
+	delay = TwoTube.ar(in, LinRand(1,-1),0.9995 ,dTime/4, dTime/4)*env;
+	delay = FoaPanB.ar(delay,pany);
+
+	Out.ar(~reverbSend, delay*0.5);
+	delay = FoaDecode.ar(delay, ~decoder);
+	Out.ar(0,delay);
+}).add;
 )
+
+
+
+
+
 
 
 

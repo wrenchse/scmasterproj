@@ -1,132 +1,148 @@
-
-
-
-
-
-
-
 (
-a = Pseq ([1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0]);
-b = Pseq ([0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0]);
-c = Pseq ([0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0]);
-d = Pseq ([0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1]);
+~drumRhythms = Dictionary.new;
+~drumRhythms.put(0, [1, 0, 0, 0, 1, 0, 0]);
+~drumRhythms.put(1, [0, 0, 1, 0, 0, 1, 0, 0]);
+~drumRhythms.put(2, [0, 1, 0, 1, 0]);
+~drumRhythms.put(3, [1, 0, 0, 0, 0, 0]);
+~drumRhythms.put(4, [0, 0, 0, 0, 1, 0, 0, 0, 0]);
+~drumRhythms.put(5, [0, 0, 0, 1, 0, 0, 0]);
 
-
-p = Ppar(
-[a, b, c, d].collect { |pattern, i|
-Pbind(
-\instrument, [\kick, \snare, \hat, \tom].at(i),
-\dur, 0.40,
-\amp, 0.1,
-\noteOrRest, Pif(pattern > 0, 1, Rest)
-)
-}
-,inf).play;
-)
-
-
-(
-a = Pseq ([1, 0, 0, 0, 1, 0, 0, 0]);
-b = Pseq ([0, 1, 0, 1, 0]);
-c = Pseq ([0, 0, 0, 0, 1, 1]);
-d = Pseq ([0, 1, 0, 1, 0, 0, 1]);
-e = Pseq ([0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0]);
-f = Pseq ([0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1]);
-
-p.stream = Ppar([a,b,c,d,e,f].collect { |pattern, i|
+p = Ppar(~drumRhythms.values.collect { |pattern, i|
+	pattern = Pseq(~drumRhythms.at(i));
 Pn(Pbind(
 		\instrument, [\kick, \snare, \hat, \tom, \brus, \brus2].at(i),
 		\dur, 1/4,
 		\tempo, 1,
-		\amp, 0.05,
-		\reson, 0,
+		\amp, 0.2,
+		\resSend, 0.5,
 		\noteOrRest, Pif(pattern > 0, 1, Rest)
 	),inf);
 	}
-).asStream;
+);
 
+~resRoutine = Pbind(
+	\instrument,	\reson2,
+	\degree,		[0, 2, 4, 7],
+	\amp, 			0.2,
+	\tempo, 		1,
+	\filtr,			Pwhite(200,600),
+	\pany, 			4.collect(Pwhite(-pi,pi,inf)),
+	\dur, 			Pseq([4],inf),
+	\octave,		4,
+);
 )
 
+
+Synth.new(\wrenchVerb);
+Synth.new(\reson);
 p.play;
 p.stop;
 
-
-(
-Pfxb(p, \reson, \out, 0).play;
-
-)
-
-
-
+Ppar([p,~resRoutine]).play
 
 
 
 (
-SynthDef(\kick, {|out = 0, amp = 0, pan, reson|
+//			K I C K
+SynthDef(\kick, {|out = 0, amp = 0, pan, resSend = 0|
 	var pop, env;
 	env = EnvGen.kr(Env.perc(0.01, 0.1, 1, -5), 1, doneAction:2);
-	pop = Blip.ar(50+LFNoise0.kr(10,30),1,0.1).distort;
-	pop = Resonz.ar(Decay.ar(pop,TRand.ar(0.1,0.11,pop)),Demand.ar(pop,0,Dseq({ 10.rand+1 })),
+	pop = Blip.ar(50+LFNoise0.kr(10,30),1,0.5).distort;
+	pop = Resonz.ar(Decay.ar(pop,TRand.ar(0.01,0.01,pop)),Demand.ar(pop,0,Dseq({ 5.rand+1 })),
 		mul:Demand.ar(pop,0,Dseq({ exprand(0.5,0.67) })));
-	pop = LeakDC.ar(pop*50,TRand.ar(0.9,0.9995,pop),0.5);
+	pop = LeakDC.ar(pop*50,TRand.ar(0.9,0.9995,pop),1);
+	pop	= Compander.ar(pop, pop, 0.2, slopeAbove: 1/3, add: 0, clampTime: 0.002);
+	pop = Limiter.ar(pop,1);
 
-	Out.ar(out, Pan2.ar(pop*env, pan, amp));
+	pop = Pan2.ar(pop*env, pan, amp*2);
+
+	Out.ar(~resonatorSend, pop * resSend);
+	Out.ar(out, pop );
 }).add;
 
-SynthDef(\snare, {|out = 0, amp = 0, pan|
-var env, snare;
-env = EnvGen.kr(Env.perc(0.1, 1, 1, -5), 1, doneAction:2);
-	snare = { arg i; HPF.ar(LPF.ar(Dust2.ar(Rand(10,100)),12000.0),60.0,WhiteNoise.ar(1)) *2 } ! 2;
-Out.ar(out, Pan2.ar(snare*env, pan, amp));
+//			S N A R E
+SynthDef(\snare, {|out = 0, amp = 0, pan, resSend = 0|
+	var env, snare;
+	env = EnvGen.kr(Env.perc(0.1, 1, 1, -5), 1, doneAction:2);
+	snare = { arg i; HPF.ar(LPF.ar(
+		Dust2.ar(Rand(10,100)),12000.0),60.0,
+		WhiteNoise.ar(1)) *2 } ! 2;
+	snare = Pan2.ar(snare*env, pan, amp/3);
+
+	Out.ar(~resonatorSend, snare * resSend);
+	Out.ar(out, snare);
 }).add;
 
-SynthDef(\hat, {|out = 0, amp = 0, pan|
-var env, snare;
-env = EnvGen.kr(Env.perc(0.001, 0.7, 1, -5), 1, doneAction:2);
-	snare = { arg i; LPF.ar(Dust.ar(Rand(100,400),LFDNoise3.ar(10).exprange(1,5)),9000.0) };
-	Out.ar(out, Pan2.ar(snare*env, TRand.ar(-1,1,snare), amp));
+//			H A T
+SynthDef(\hat, {|out = 0, amp = 0, pan, resSend = 0|
+	var env, sound;
+	env = EnvGen.kr(Env.perc(0.001, 0.7, 1, -5), 1, doneAction:2);
+	sound = { arg i; LPF.ar(Dust.ar(
+		Rand(100,400),
+		LFDNoise3.ar(10).exprange(1,5)),9000.0) };
+	sound = Pan2.ar(sound*env, TRand.ar(-1,1,sound), amp/3);
+
+	Out.ar(~resonatorSend, sound * resSend);
+	Out.ar(out, sound);
 }).add;
 
-SynthDef(\tom, {|out = 0, amp = 0, pan|
-var env, snare;
-env = EnvGen.kr(Env.perc(0.1, 3, 1, -5), 1, doneAction:2);
-	snare = LPF.ar(GrayNoise.ar(LFDNoise3.ar(60))*WhiteNoise.ar(0.2),12000.0);
-	Out.ar(out, Pan2.ar(snare*env, TRand.ar(-1,1,snare), amp));
+//			T O M
+SynthDef(\tom, {|out = 0, amp = 0, pan, resSend = 0|
+	var env, sound;
+	env = EnvGen.kr(Env.perc(0.1, 3, 1, -5), 1, doneAction:2);
+	sound = LPF.ar(GrayNoise.ar(
+		LFDNoise3.ar(60))*WhiteNoise.ar(0.2),12000.0);
+	sound = Pan2.ar(sound*env, TRand.ar(-1,1,sound), amp/3);
+
+	Out.ar(~resonatorSend, sound * resSend);
+	Out.ar(out, sound);
 }).add;
 
-SynthDef(\brus, {|out = 0, amp = 0, pan|
-var env, snare;
-env = EnvGen.kr(Env.perc(1, 5, 1, -5), 1, doneAction:2);
-	snare = LPF.ar(BrownNoise.ar(PinkNoise.ar.range(0.01,0.1)),Rand(3000,12000));
-	Out.ar(out, Pan2.ar(snare*env, TRand.ar(-1,1,snare), amp));
+//			B R U S
+SynthDef(\brus, {|out = 0, amp = 0, pan, resSend = 0|
+	var env, sound;
+	env = EnvGen.kr(Env.perc(1, 7, 0.8, -5), 1, doneAction:2);
+	sound = LPF.ar(BrownNoise.ar(
+		PinkNoise.ar.range(0.01,0.1)),
+		Rand(3000,1200));
+
+	sound = Pan2.ar(sound*env, TRand.ar(-1,1,sound), amp/3);
+	Out.ar(~resonatorSend, sound * resSend);
+	Out.ar(out, sound);
 }).add;
 
-SynthDef(\brus2, {|out = 0, amp = 0, pan|
-var env, snare;
-env = EnvGen.kr(Env.perc(0.5, 6, 1, -5), 1, doneAction:2);
-	snare = HPF.ar(LPF.ar(GrayNoise.ar(LFDNoise3.ar(0.1))*WhiteNoise.ar(0.1),Rand(10000.0,14000.0)), Rand(5000.0,8000.0));
-	Out.ar(out, Pan2.ar(snare*env, TRand.ar(-1,1,snare), amp));
+//			B R U S 2
+SynthDef(\brus2, {|out = 0, amp = 0, pan, resSend = 0|
+	var env, sound;
+	env = EnvGen.kr(Env.perc(0.5, 10, 1, -5), 1, doneAction:2);
+	sound = HPF.ar(LPF.ar(GrayNoise.ar(LFDNoise3.ar(0.1))*WhiteNoise.ar(0.1),Rand(10000.0,14000.0)), Rand(5000.0,8000.0));
+	sound = Pan2.ar(sound*env, TRand.ar(-1,1,sound), amp/3);
+
+	Out.ar(~resonatorSend, sound * resSend);
+	Out.ar(out, sound);
 }).add;
 
 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 midNoise = LPF.ar(GrayNoise.ar(LFDNoise3.ar(60))*WhiteNoise.ar(0.009),12000.0) ! numChan;
 
 HPF.ar(LPF.ar(GrayNoise.ar(LFDNoise3.ar(0.1))*WhiteNoise.ar(0.01),14000.0),8000.0)
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
