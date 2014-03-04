@@ -12,9 +12,12 @@ Synth.new(\wrenchVerb, [\vol, 1]);
 (
 SynthDef(\droneWrench, { |
 	out		=	0, 		freq 	=	60,		mod	=	0.2,
-	revLev 	=	0.5,	resLev 	=	0,		amp	=	1 |
+	revLev 	=	0.5,	resLev 	=	0,		amp	=	1,
+	gate 	= 	1										|
 
-	var drone1, drone2, freq1 = freq, sound;
+	var drone1, drone2, freq1 = freq, sound, env;
+
+	env = EnvGen.kr(Env.adsr(2,0,1,4),gate, doneAction: 2);
 
 	drone1 = 4.collect{
 		arg i;
@@ -43,7 +46,8 @@ SynthDef(\droneWrench, { |
 	drone2 = FoaTransform.ar(drone2,
 		'rotate',LFSaw.ar(0.1,mul: -pi));
 
-	sound = FoaDecode.ar(drone1+drone2, ~decoder);
+	sound = (drone1+drone2)*env;
+	sound = FoaDecode.ar(sound, ~decoder);
 
 	Out.ar(out, sound*amp);
 

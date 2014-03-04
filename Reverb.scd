@@ -63,7 +63,7 @@ s.waitForBoot{
 		var sound;
 
 		sound = DelayL.ar(In.ar(buss,2),0.2,SinOsc.kr(0.2, 0, 0.01,0.01));
-
+		 SendPeakRMS.kr(sound*2, 20, 3, "/replyAddress");
 		ReplaceOut.ar(buss,sound);
 	}).add;
 
@@ -106,5 +106,28 @@ s.waitForBoot{
 
 )
 
+m = NetAddr("127.0.0.1", 9000); // loopback
+
+m.sendMsg("/chat", "Hello App 1");
 
 
+
+(
+{
+    SendPeakRMS.kr(Dust.ar(1), 20, 3, "/replyAddress")
+}.play;
+)
+
+(
+m = NetAddr("127.0.0.1", 9000); // loopback
+o = OSCFunc({ |msg| m.sendMsg("/rms", msg[3]*2)}, '/replyAddress');
+)
+o.free;
+
+
+
+
+OscFunc
+
+
+SendPeakRMS

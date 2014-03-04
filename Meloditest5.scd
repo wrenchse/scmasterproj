@@ -221,6 +221,7 @@ SynthDef(\pinguPingu, { |
 
 	var syntEnv, filtEnv, sound, chorus, delay, waveForm, lfo1, lfo2;
 
+
 	//lfo1 = SinOsc.kr(lfo1s,pi/2,0.5,1);
 	//lfo2 = LFTri.kr(lfo2s);
 
@@ -262,6 +263,8 @@ DetectSilence.ar(sound, doneAction:2);
 	Out.ar(~reverbSend,sound * revAmm/2);
 	Out.ar(0,
 		(	sound 	) * amp);
+
+
 
 }).add;
 

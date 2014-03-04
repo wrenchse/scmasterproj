@@ -12,7 +12,7 @@ s.waitForBoot{
 		var ir, irbuffers = Array.fill(4), bufsize;
 		irbuffers.do {|b, i| irbuffers[i] = Buffer.readChannel(s, "Hall1.wav".resolveRelative, channels: [i], numFrames: 48000*2)};
 
-s.sync;
+		s.sync;
 		bufsize= PartConv.calcBufSize(~fftsize, irbuffers[0]).postln;
 
 		// ~numpartitions= PartConv.calcNumPartitions(~fftsize, irbuffer);
@@ -54,7 +54,7 @@ SynthDef(\ambiOut, {|out, dry = 1.0, wet = 0.0 |
 
 	// Convolution Reverb
 	o = FoaDecode.ar(o,  FoaDecoderMatrix.newBtoA);
-//	o = (o*dry) + (PartConv.ar(o, ~fftsize, ~irspectrum.bufnum, 0.5)*wet);
+	//	o = (o*dry) + (PartConv.ar(o, ~fftsize, ~irspectrum.bufnum, 0.5)*wet);
 	o = (o*dry) + ~irspectra.collect{|s, i| PartConv.ar(o[i], ~fftsize, s.bufnum, 0.3)*wet*0.1};
 	o = FoaEncode.ar(o, FoaEncoderMatrix.newAtoB);
 
@@ -65,10 +65,15 @@ SynthDef(\ambiOut, {|out, dry = 1.0, wet = 0.0 |
 
 
 (
+
+~layerAroute = Bus.audio(s,1);
+~layerBroute = Bus.audio(s,1);
+
+
 //  W A V E F O R M S --------------------------------------------------- //
 
 (
-SynthDef(\sine, { | amp = 0.1, freq = 440, out = 11 |
+SynthDef(\sine, { | amp = 0.1, freq = 440, out = 0 |
 	var wave, swell;
 	swell = LFDNoise3.ar(amp);
 	wave = SinOsc.ar(freq,0)*0.1*swell;
@@ -76,7 +81,7 @@ SynthDef(\sine, { | amp = 0.1, freq = 440, out = 11 |
 }, [0.5, 0.5]).add;
 
 
-SynthDef(\saw, { | amp = 0.1, freq = 440, out = 11 |
+SynthDef(\saw, { | amp = 0.1, freq = 440, out = 0 |
 	var wave, swell;
 	swell = LFDNoise3.ar(amp);
 	wave = Saw.ar(freq)*0.1*swell;
@@ -84,7 +89,7 @@ SynthDef(\saw, { | amp = 0.1, freq = 440, out = 11 |
 }, [0.5, 0.5]).add;
 
 
-SynthDef(\Tri, { | amp = 0.1, freq = 440, width = 0.1, out = 11 |
+SynthDef(\Tri, { | amp = 0.1, freq = 440, width = 0.1, out = 0 |
 	var wave, swell;
 	swell = LFDNoise3.ar(amp);
 	wave = LFTri.ar(freq)*0.1*swell;
@@ -92,14 +97,14 @@ SynthDef(\Tri, { | amp = 0.1, freq = 440, width = 0.1, out = 11 |
 }, [0.5, 0.5]).add;
 
 
-SynthDef(\pulse, { | amp = 0.1, freq = 440, width = 0.1, out = 11 |
+SynthDef(\pulse, { | amp = 0.1, freq = 440, width = 0.1, out = 0 |
 	var wave, swell;
 	swell = LFDNoise3.ar(amp);
 	wave = Pulse.ar(freq, width)*0.1*swell;
 	Out.ar(out,wave*0.2);
 }, [0.5, 0.5, 0.5]).add;
 
-SynthDef(\nojs, { | amp = 0.1, freq = 20000, width = 0.1, out = 11, vol = 0.0 |
+SynthDef(\nojs, { | amp = 0.1, freq = 20000, width = 0.1, out = 0, vol = 0.0 |
 	var wave, swell;
 	swell = LFDNoise3.ar(amp);
 	wave = Dust.ar(freq, 1)*0.1*swell*vol;
@@ -112,42 +117,47 @@ SynthDef(\nojs, { | amp = 0.1, freq = 20000, width = 0.1, out = 11, vol = 0.0 |
 //  M O D U L E S ------------------------------------------------------ //
 
 (
-SynthDef(\mixer, { | avol = 1.0, bvol = 1.0, hpa = 0, hpb = 0, mix = -1 |
-	var layerA, layerB, nojs, modul;
+SynthDef(\mixer, {|
+	del1 = 0.003, 		del2 = 0, out = 0, 	avol = 1.0,		bvol = 1.0, 	hpa = 0,
+	hpb = 0, 	mix = -1,
+	fbf = 0.01,	resSend = 0,	dstAmm = 1, 	dstFreq = 5000 |
 
-	layerA = HPF.ar(In.ar(11,1)*avol,hpa);
-	layerB = HPF.ar(In.ar(12,1)*bvol,hpb);
-	nojs = In.ar(17);
+	var layerA, layerB, modul, feedback, local;
 
-	modul = XFade2.ar(layerB+layerA,(layerB*layerA)*20,mix);
+	//		LAYERS CROSS FADE AND CROSS MODULATION
 
-	Out.ar(30,modul+nojs);
+	layerA = 	HPF.ar(In.ar(~layerAroute,1)*avol,hpa);
+	layerB = 	HPF.ar(In.ar(~layerBroute,1)*bvol,hpb);
+	modul = 	XFade2.ar(layerB+layerA,(layerB*layerA)*20,mix);
 
-	/*Out.ar(0,layerA);
-	Out.ar(1,layerB);*/
-}).add;
+
+	//		PHASE SPIN EFFECT (PAN)
+
+	local = 	LocalIn.ar(1);
+	feedback = 	SinOsc.ar(fbf);
+	modul =		modul + (local*fbf);
+	modul =		[DelayC.ar(modul,0.2,del1*SinOsc.kr(0.1,add:1)), DelayC.ar(modul,0.2,del2)];
+	LocalOut.ar(LeakDC.ar(modul[0]));
+	modul = 	DFM1.ar(modul,dstFreq,0.1,dstAmm)/(1+(dstAmm/3));
+
+	Out.ar(out, modul);
+},[1,1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]).add;
 );
 
 
 (
-SynthDef(\reverb, { | mix = 0, prepost |
+SynthDef(\smear, { | mix = 1, in = 30 |
+	var sound;
 
-	var z, y, s;
+	sound = In.ar(in);
 
+	sound = DelayN.ar(sound, 0.048);	// reverb predelay time
 
-	s = In.ar(30);
+	sound = Mix.ar(Array.fill(7,{ CombL.ar(sound, 0.1, LFNoise1.kr(0.1.rand, 0.04, 0.05), 15) })); 	// 7 length modulated comb delays in parallel :
 
-	// reverb predelay time :
-	z = DelayN.ar(s, 0.048);
+	sound = 4.collect({ AllpassN.ar(sound, 0.050, [0.050.rand, 0.050.rand], 1) }); // two parallel chains of 4 allpass delays (8 total) :
 
-	// 7 length modulated comb delays in parallel :
-	y = Mix.ar(Array.fill(7,{ CombL.ar(z, 0.1, LFNoise1.kr(0.1.rand, 0.04, 0.05), 15) }));
-
-	// two parallel chains of 4 allpass delays (8 total) :
-	4.do({ y = AllpassN.ar(y, 0.050, [0.050.rand, 0.050.rand], 1) });
-
-	// add original sound to reverb and play it :
-	Out.ar(32,(s+(mix*(y*0.5)))*0.5);
+	Out.ar(0,sound*0.5);
 }).add;
 );
 
@@ -169,7 +179,7 @@ SynthDef(\panspin, { | del1 = 0, del2 = 0, fbf = 0.01, resSend = 0, dstAmm = 1, 
 	delay2 = DFM1.ar(delay2,dstFreq,0.1,dstAmm)/(1+(dstAmm/3));
 
 	//Out.ar([50,51],[delay1, delay2]*resSend);
-	Out.ar([~ambiBus],[delay1, delay2]);
+	//Out.ar([~ambiBus],[delay1, delay2]);
 
 
 },[0.5, 0.5, 0.5]).add;
@@ -187,7 +197,7 @@ SynthDef(\resonator, { | freqs =#[40,44,47,52,56] , pitches = 0, fb = 0, vol = 0
 
 	delay = CombC.ar(in, 0.2, dTime, fb, 10)*vol;
 	//LocalOut.ar(LeakDC.ar(delay*0.8));
-	Out.ar([~ambiBus],[delay*0.2,delay*0.2]);
+	//Out.ar([~ambiBus],[delay*0.2,delay*0.2]);
 
 },[0.5,2]).add;
 );
@@ -195,70 +205,40 @@ SynthDef(\resonator, { | freqs =#[40,44,47,52,56] , pitches = 0, fb = 0, vol = 0
 )
 
 
-
-
-
-
-
-
-PG_Cookbook07_Rhythmic_Variations
-An ever-changing drumbeat
-
-Pitch
-
-
-
-
-
-
-
-
-
-
-
-
-// ---------------------------------------------------------------------------------
+(
+f = Pmono(
+	\mixer,
+	\del1, Pseq([0.001,0.02,0.003,0.0004],inf),
+	\mix, 0.5,
+	\distAmm, 20,
+);
+t = Ppar(
+	4.collect { | i |
+	Pn(Pmono(
+		[\sine, \saw, \Tri, \pulse].at(i),
+		\amp, 0.2,
+		\dur, 1,
+		\out, ~layerAroute,
+		\degree, [0,15,27,33],
+		\resSend, 0.5,
+		\octave, 1,
+	),inf);
+	} ++
+	4.collect { | i |
+	Pn(Pmono(
+		[\sine, \saw, \Tri, \pulse].at(i),
+		\amp, 0.2,
+		\dur, 1,
+		\out, ~layerBroute,
+		\degree, [0,15,27,33],
+		\resSend, 0.5,
+		\octave, 3,
+	),inf);
+	}
+);
+)
 
 (
-
-u = { | freqs =#[47,48,49,50], pitches = 20, amm |
-
-	var in, out, delay, dTime;
-
-	dTime = (1000/(freqs).midicps)/1000;
-
-	in = (PinkNoise.ar(0.1)+Saw.ar(1500,0.2)) * EnvGen.ar(Env.perc(0.05, 0.01, 0.01, -4),Impulse.kr(1)); // + LocalIn.ar(1);
-
-	delay = CombC.ar(in, 0.2, dTime, 15, 5);
-	//LocalOut.ar(LeakDC.ar(delay*0.8));
-	Out.ar([0,1],delay);
-
-}.play;
-);
-
-
-60.midicps
-
-1000/12
-
-1000/83.33333
-
-
-
-
-
-
-
-
-Document.open("/Synth 2.sc")
-
-
-
-
-
-
-
-
-
-
-
+f.play;
+t.play
+)

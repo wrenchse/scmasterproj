@@ -9,7 +9,7 @@
 
 p = Ppar(~drumRhythms.values.collect { |pattern, i|
 	pattern = Pseq(~drumRhythms.at(i));
-Pn(Pbind(
+	Pn(Pbind(
 		\instrument, [\kick, \snare, \hat, \tom, \brus, \brus2].at(i),
 		\dur, 1/4,
 		\tempo, 1,
@@ -157,33 +157,33 @@ HPF.ar(LPF.ar(GrayNoise.ar(LFDNoise3.ar(0.1))*WhiteNoise.ar(0.01),14000.0),8000.
 
 (
 SynthDef(\kick, {|out = 0, amp = 0, pan|
-var env, bass;
-env = EnvGen.kr(Env.perc(0.001, 0.2, 1, -4), 1, doneAction:2);
-bass = SinOsc.ar(80) + Crackle.ar(1, 0.5);
-Out.ar(out, Pan2.ar(bass*env, pan, amp));
+	var env, bass;
+	env = EnvGen.kr(Env.perc(0.001, 0.2, 1, -4), 1, doneAction:2);
+	bass = SinOsc.ar(80) + Crackle.ar(1, 0.5);
+	Out.ar(out, Pan2.ar(bass*env, pan, amp));
 }).add;
 
 SynthDef(\snare, {|out = 0, amp = 0, pan|
-var env, snare;
-env = EnvGen.kr(Env.perc(0.001, 0.1, 1, -5), 1, doneAction:2);
-snare = SinOsc.ar(120) - WhiteNoise.ar(0.5, 0.5);
-Out.ar(out, Pan2.ar(snare*env, pan, amp));
+	var env, snare;
+	env = EnvGen.kr(Env.perc(0.001, 0.1, 1, -5), 1, doneAction:2);
+	snare = SinOsc.ar(120) - WhiteNoise.ar(0.5, 0.5);
+	Out.ar(out, Pan2.ar(snare*env, pan, amp));
 }).add;
 
 SynthDef(\hat, {|out = 0, amp = 0, pan|
-var env, hat;
-env = EnvGen.kr(Env.perc(0.002, 0.3, 1, -2), 1, doneAction:2);
-hat = Klank.ar(`[ [ 6563, 9875 ],
-[ 0.6, 0.5 ],
-[ 0.002, 0.003] ], PinkNoise.ar(1));
-Out.ar(out, Pan2.ar(hat*env, pan, amp));
+	var env, hat;
+	env = EnvGen.kr(Env.perc(0.002, 0.3, 1, -2), 1, doneAction:2);
+	hat = Klank.ar(`[ [ 6563, 9875 ],
+		[ 0.6, 0.5 ],
+		[ 0.002, 0.003] ], PinkNoise.ar(1));
+	Out.ar(out, Pan2.ar(hat*env, pan, amp));
 }).add;
 
 SynthDef(\tom, {|out = 0, amp = 0, pan|
-var env, tom;
-env = EnvGen.kr(Env.perc(0.001, 0.1, 1, -5), 1, doneAction:2);
-tom = SinOsc.ar(440);
-Out.ar(out, Pan2.ar(tom*env, pan, amp));
+	var env, tom;
+	env = EnvGen.kr(Env.perc(0.001, 0.1, 1, -5), 1, doneAction:2);
+	tom = SinOsc.ar(440);
+	Out.ar(out, Pan2.ar(tom*env, pan, amp));
 }).add;
 )
 
@@ -234,7 +234,7 @@ fork{
 
 			snaretrig = Impulse.kr(trigtime);
 			snare = 3*PinkNoise.ar(1!2) *
-				EnvGen.kr(Env.perc(0.01,0.01,[0,0.3.rand].choose),snaretrig);
+			EnvGen.kr(Env.perc(0.01,0.01,[0,0.3.rand].choose),snaretrig);
 			5.do{snare = AllpassC.ar(snare, 0.5, {0.05.rand}.dup(2), 1.0.rand)+snare};
 			5.do{snare = (snare.distort + snare)*0.85};
 
