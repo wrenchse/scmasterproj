@@ -44,7 +44,7 @@ Ppar([p,~resRoutine]).play
 
 (
 //			K I C K
-SynthDef(\kick, {|out = 0, amp = 0, pan, resSend = 0|
+SynthDef(\kick, {|out = 0, amp = 0.5, pan, resSend = 0|
 	var pop, env;
 	env = EnvGen.kr(Env.perc(0.01, 0.1, 1, -5), 1, doneAction:2);
 	pop = Blip.ar(50+LFNoise0.kr(10,30),1,0.5).distort;
@@ -61,7 +61,7 @@ SynthDef(\kick, {|out = 0, amp = 0, pan, resSend = 0|
 }).add;
 
 //			S N A R E
-SynthDef(\snare, {|out = 0, amp = 0, pan, resSend = 0|
+SynthDef(\snare, {|out = 0, amp = 0.5, pan, resSend = 0|
 	var env, snare;
 	env = EnvGen.kr(Env.perc(0.1, 1, 1, -5), 1, doneAction:2);
 	snare = { arg i; HPF.ar(LPF.ar(
