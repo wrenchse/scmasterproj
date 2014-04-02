@@ -211,12 +211,53 @@ thisThread.randSeed = ~seed;
 );
 
 
-
 ~metaNotes = { | data  |
 	6.collect {|i|
 		LinLin.kr(data[i],data.sum/7,1.0,0,24).round
 	};
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

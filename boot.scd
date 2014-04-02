@@ -53,11 +53,35 @@ s.waitForBoot{
 
 		verb = FoaDecode.ar(in,  FoaDecoderMatrix.newBtoA); // Decode
 		verb = ~irspectra.collect{|s, i|
-			PartConv.ar(verb[i], ~fftsize, s.bufnum, 0.3)*vol*0.1};
+		PartConv.ar(verb[i], ~fftsize, s.bufnum, 0.3)*vol*0.1};
 		verb = FoaEncode.ar(verb, FoaEncoderMatrix.newAtoB);  // Encode
 
 		Out.ar(out, FoaDecode.ar(verb, ~decoder));
 	}).add;
+
+	s.sync;
+
+	//			DEFINE SOME GROUPS
+
+	~makeGroups = {|num|
+		var l = List[];
+		var g = Group.new;
+		l.add(g);
+		(num - 1).do {
+			var gg = g;
+			g = Group.after(gg);
+			l.add(g);
+		};
+		l; // return the list
+	};
+	~groups = ~makeGroups.(8);
+
+	// // SkipJack example
+	SkipJack({ ~groups ?? { ~groups = ~makeGroups.(8) } }, 0.5);
+	CmdPeriod.add({ ~groups = nil });
+	// //   CmdPeriod.removeAll; // unregister all actions
+
+
 
 
 	//			EFFECTS
@@ -107,6 +131,7 @@ s.waitForBoot{
 		Out.ar(0,delay);
 	}).add;
 
+
 	SynthDef(\samplePlayer, { |
 		out=0, buf = 0, 	rate = 1, at =0.01,
 		rel= 0.1, pos =0, pSpeed = 0, lev = 0.5, datan =#[0,1,0]
@@ -125,6 +150,10 @@ s.waitForBoot{
 		Out.ar(out, sound);
 	}).add;
 
+
+	s.sync;
+
+
 	// MASTER OUTPUT
 
 	SynthDef(\ambiOut, {|out, dry = 1.0, wet = 0.0, in = 10 |
@@ -135,55 +164,3 @@ s.waitForBoot{
 };
 )
 
-
-Array
-
-
-
-//
-// m = NetAddr("127.0.0.1", 9000); // loopback
-//
-// m.sendMsg("/chat", "Hello App 1");
-//
-//
-//
-// (
-// {
-// 	SendPeakRMS.kr(Dust.ar(1), 20, 3, "/replyAddress")
-// }.play;
-// )
-//
-// (
-// m = NetAddr("127.0.0.1", 9000); // loopback
-// o = OSCFunc({ |msg| m.sendMsg("/rms", msg[3]*2)}, '/replyAddress');
-// )
-// o.free;
-o.free;
-//
-(
-
-o = OSCFunc({| msg |
-	Synth(\snare);
-		~data = msg;
-	~data.removeAt(0);
-	~pMetafyx.(data: ~data, vol: 0.4, mix: -1, len: 1,  smear: 0.2, lpf: 10000, resS: 1, dist: 2, dmix: -1 ).play;
-}, '/start'); // create the OSCresponderNode
-
-p = OSCFunc({| msg |
-	Synth(\kick);
-}, '/gui'); // create the OSCresponderNode
-
-)
-~data
-	~pMetafyx.(data: ~data, vol: 0.4, mix: -1, len: 1,  smear: 0.2, lpf: 10000, resS: 1, dist: 2, dmix: -1 ).play;
-//
-// Synth(\kick);
-//
-//
-// NetAddr.localAddr.port
-//
-// OscFunc
-//
-//
-// SendPeakRMS
-//

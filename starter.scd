@@ -1,17 +1,43 @@
-(
-s.makeGui;
-s.meter;
+
 s.plotTree;
-)
 
 (
 s.freeAll;
 ~seed = 12;
-"Reverb.scd".resolveRelative.load;
+"boot.scd".resolveRelative.load;
 "pingupingu.scd".resolveRelative.load;
 "scalebuilder.scd".resolveRelative.load;
 "rutiner.scd".resolveRelative.load;
+"fm.scd".resolveRelative.load;
+"metafys.scd".resolveRelative.load;
 )
+
+
+p = ~pMetafyx.(data: ~data, vol: 0.5, mix: -1, len: 10,  smear: 0.7, lpf: 10000, resS: 1, dist: 2, dmix: -1).play;
+
+
+
+
+(
+
+o = OSCFunc({| msg |
+	Synth(\snare);
+		~data = msg;
+	~data.removeAt(0);
+	~playIt = ~pMetafyx.(data: ~data, vol: 0.4, mix: -1, len: 1,  smear: 0.2, lpf: 10000, resS: 1, dist: 2, dmix: -1 ).play;
+}, '/start'); // create the OSCresponderNode
+
+p = OSCFunc({| msg |
+	Synth(\kick);
+	~playIt.stop;
+}, '/gui'); // create the OSCresponderNode
+
+)
+
+
+
+
+
 
 
 
