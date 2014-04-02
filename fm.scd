@@ -13,10 +13,10 @@ SynthDef("wCarrier", { arg inbus = 2, outbus = 0, freq = 440, carPartial = 1, in
 	//o = BLowPass.ar(o,freq*5,1,2); // ANVÄND LOW PASS FÖR ATT FILTRERA BORT HÖGA GREJER OCH LÅT DET SEDAN KOMMA IN I CRAZY PASSAGER
 
 	o = FoaEncode.ar(o,FoaEncoderMatrix.newOmni);
-	o = FoaTransform.ar(o,'focus',pi/4,LFSaw.ar(0.1*speed,mul: pi));
+	o = FoaTransform.ar(o,'focus',pi/2,LFSaw.ar(0.1*speed,mul: pi));
 
 	o = o * envelope;
-
+	o = FoaDecode.ar(o,~decoder);
 	Out.ar(~reverbSend, o);
 	Out.ar(0, o )
 }).add;
@@ -36,7 +36,7 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 	Out.ar( outbus, o * mul);
 }).add;
 
-~pDrone2cm.(dura: 10, data: ~data, octave: 2, index: 2, amm: ~data, deg: 0, st: 3).play
+//~pDrone2cm.(dura: 10, data: ~data, octave: 2, index: 2, amm: ~data, deg: 0, st: 3).play
 
 ~pDrone2cm = { arg dura = 60, data, octave=2, bus = 62, mod = 1, amm = 1, index= 3, mp =1, cp=1, st =3, deg= 0;
 	Pchain(
@@ -89,7 +89,7 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 			addAction: 0,
 			modPartial: mp,
 			index: index,
-			ctranspose: fdeg,
+			//ctranspose: fdeg,
 			mul: 1 - (0.2),
 			data: [data],
 			iespeed: dur+env[3],
@@ -112,4 +112,75 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 };
 
 
-~pFM.(data: ~data).play
+//~pFM.(data: ~data).play
+
+
+~arpFM = {|data|
+	var thing, pArp;
+
+	thing = {|i|
+		Pbind(
+			\index,		Pseq(4.collect{[0, 2*i, 4*i, 7*i].scramble}.flat));
+	};
+
+
+	pArp = { | oct = 2, legato = 1 |
+		Pbind(
+			\degree,        Pseq(4.collect{[0, 2, 4, 7].scramble}.flat),
+			\mtranspose,	Pseq(4.collect{[0, 2, 4, 7].scramble}.flat),
+			\tempo,         100/120,
+			\dur, 			Pn(Pseq((8.collect{1/4} ++ 16.collect{1/8}).scramble),1,\step),
+			\octave,		oct,
+			\scale, 		~scaleBuilder.(data),//[0, 2, 3, 5, 7, 9, 10],
+			\root,          ~root.(data),
+			\env,           [[0.01,0.1,0.2,0.5]],
+		);
+	};
+
+	o = Pfsm([
+		#[3,4,5,6,7], // entry states
+
+		//e1 (== state 0)
+		Pchain(thing.(1),pArp.(5,2)),
+		#[1, 1, 3, 1, 1, 1, 1, 4],
+
+		//e2 (== state 1)
+		Pchain(thing.(0),pArp.(5,2)),
+		#[0, 1],
+
+		//e3 (== state 2)
+		Pchain(thing.(1),pArp.(5,2)),
+		#[0, 1, 2, 2, 2, 2, 3, 3, 3, 3],
+
+		//e4 (== state 3)
+		Pchain(thing.(10),pArp.(5,2)),
+		#[4, 4, 4, 6, 6],
+
+		//e5 (== state 4)
+		Pchain(thing.(0.5),pArp.(5,2)),
+		#[2, 3],
+
+		//e6 (== state 5)
+		Pchain(thing.(0),pArp.(5,2)),
+		#[0, 2, 4, 5, 5, 5, 5, 5, 5, 5],
+
+		//e7 (== state 6)
+		Pchain(thing.(3),pArp.(5,2)),
+		#[4, 4, 4, 4, 6, 6, 6, 7, 7, 7],
+
+		//e8 (== state 7)
+		Pchain(thing.(200),pArp.(5,2)),
+		#[1, 3, 6, 6, 6],
+
+		// terminal state
+		nil, nil
+	]);
+};
+
+/*
+(
+~data = 7.collect( { 1-0.2.rand } );
+//Pchain(	~pFM.(data: ~data, ieamm: 20, fdeg: 0), ~arpFM.(~data) ).play;
+Pchain(	Pn(~pDrone2cm.(data: ~data, octave: 2, index: 2, amm: ~data, deg: 0, st: 3)), ~arpu.() ).play
+)
+*/
