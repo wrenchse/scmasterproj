@@ -54,20 +54,20 @@ s.plotTree
 
 
 (
-~pChords = Pbind(
+~pFMChords = Pbind(
 	\degree,		#[0, 2, 4, 7],
 	\legato, 		3/4,
 	\amp, 			0.2,
-	\dur, 			Pseq([4],inf),
-	\mtranspose, 	Pseq([0,2,5,1,7,9],inf),
-	\octave, 3
+	\dur, 			Pseq([4,4],inf),
+	\mtranspose, 	Pseq([0,0,2,2,5,5,1,1,7,7,9,9],inf),
+	\octave, 4
 );
 
 
 
-Pchain(	~pFM.(data: ~data, ieamm: 2, fdeg: 0), ~pChords ).play;
+(~pFM.(data: ~data, index: 1, fdeg: 24) <> ~pFMChords).play;
 )
-
+Pcollect
 ~chords.play
 
 

@@ -81,7 +81,7 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 
 
 
-~pFM = { arg dur = 1, data, octave=4, bus = 62, mod = 1, amm = 1, index= 0, mp =1, cp=1, st =1, deg = 0, fdeg=12, iespeed=0, ieamm = 10, env = #[0,1,0.8,1];
+~pFM = { arg dur = 1, data, octave=4, bus = 62, mod = 1, amm = 1, index= 0, mp =1, cp=1, st =1, deg = 0, fdeg=12, iespeed=0, ieamm = 0, env = #[0,1,0.8,1];
 	Ppar([
 		Pbind(*[
 			instrument: \wModulator,
@@ -89,7 +89,7 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 			addAction: 0,
 			modPartial: mp,
 			index: index,
-			//ctranspose: fdeg,
+			ctranspose: fdeg,
 			mul: 1 - (0.2),
 			data: [data],
 			iespeed: dur+env[3],
