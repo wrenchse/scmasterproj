@@ -2,7 +2,7 @@
 
 
 // CARRIER ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SynthDef("wCarrier", { arg inbus = 2, outbus = 0, freq = 440, carPartial = 1, index = 3, mul = 0.2, speed = 1, env =#[10,0,1,10], gate = 1, da=2;
+SynthDef("wCarrier", { arg inbus = 2, outbus = 0, freq = 440, carPartial = 1, index = 3, mul = 0.2, speed = 1, env =#[10,0,1,10], gate = 1, da=2, amp=1;
 	var mod, car, envelope;
 
 	mod = In.ar(inbus, 1);
@@ -15,7 +15,7 @@ SynthDef("wCarrier", { arg inbus = 2, outbus = 0, freq = 440, carPartial = 1, in
 	o = FoaEncode.ar(o,FoaEncoderMatrix.newOmni);
 	o = FoaTransform.ar(o,'focus',pi/2,LFSaw.ar(0.1*speed,mul: pi));
 
-	o = o * envelope;
+	o = o * envelope * amp;
 	o = FoaDecode.ar(o,~decoder);
 	Out.ar(~reverbSend, o);
 	Out.ar(0, o )
@@ -36,52 +36,57 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 	Out.ar( outbus, o * mul);
 }).add;
 
-//~pDrone2cm.(dura: 10, data: ~data, octave: 2, index: 2, amm: ~data, deg: 0, st: 3).play
 
-~pDrone2cm = { arg dura = 60, data, octave=2, bus = 62, mod = 1, amm = 1, index= 3, mp =1, cp=1, st =3, deg= 0;
+~pDcm = { |data, oct=2, bus=60, mod=1, ix=3, mp=1, cp=1, st=3, deg= 0,amp=1|
+
 	Pchain(
-		Pbind(
-			\group, ~groups[2],
-			\legato, 1),
+		Pbind(	\group, ~groups[2]	),
 		Ppar(
 			st.collect{ | iter |
 				Ppar(
-					amm.collect{ |i, n|
+					data.collect{ |i, n|
 						Pmono(*[
-							 \wModulator,
-							octave: octave+iter,
-							freq: (~root.(data)+(octave*12)).midicps*(1+i),
+							\wModulator,
+							//octave: 1,
+							freq: (~root.(data)+(oct*12)).midicps*(1+(data[i]*i)),
+							//degree: [0,7,11,14,16,18,19s].at(i),
+							scale: ~scaleBuilder.(data),
 							root: ~root.(data),
 							addAction: 0,
 							outbus: bus+(iter),
 							modPartial: mp*n+iter,
-							//index: 1*n*i+(index/10),
-							mul: 1 - (0.2*n),
+							index: i*(ix/20),
+							mul: 2 - (0.2*n),
 							//dur: Pseq([dura],1)
 						])
 					}	++	[
 						Pmono(*[
-							 \wCarrier,
-							octave: octave,
+							\wCarrier,
+							octave: oct,
 							data: [data],
 							root: ~root.(data),
 							addAction: 1,
 							inbus: bus+(iter),
 							degree: deg,
 							carPartial: cp*data.sum/7+iter,
-							index: index/2,
-							speed: (1+iter),
+							index: ix/2,
+							speed: (1*iter),
+							amp: amp,
 							da: 2,
 							//dur: Pseq([dura],1),
 				])])
 		})
 	)
 };
+// ~data = 7.collect( { 1-0.3.rand } );
+// ~pDcm.(~data, 2, 60, ix: 20, mp:1, cp: 1, st: 3).play;
+// ~pDcm.(~data, 4.5, 64, ix: 10, mp:1, cp: 1, st: 3, amp:0.2).play
 
 
 
 
-~pFM = { arg dur = 1, data, octave=4, bus = 62, mod = 1, amm = 1, index= 0, mp =1, cp=1, st =1, deg = 0, fdeg=12, iespeed=0, ieamm = 0, env = #[0,1,0.8,1];
+
+~pFM = { arg data, octave=4, bus = 70, mod = 1, amm = 1, index= 0, mp =1, cp=1, st =1, deg = 0, fdeg=12, iespeed=0, ieamm = 0, env = #[0,1,0.8,1], amp = 2, dur = 1;
 	Ppar([
 		Pbind(*[
 			instrument: \wModulator,
@@ -107,15 +112,54 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 				speed: 1,
 				inbus: bus,
 				da: 2,
+				amp: amp,
 				group: ~groups[1]
 	])],1)
 };
 
 
+
+~pFMo = {arg data, octave=4, bus = 70, mod = 1, amm = 1, index= 0, mp =1, cp=1, st =1, deg = 0, fdeg=12, iespeed=0, ieamm = 0, env = #[0,1,0.8,1], amp=2, dur = 1;
+	Ppar([
+		PmonoArtic(*[
+			 \wModulator,
+			root: ~root.(data),
+			addAction: 0,
+			modPartial: mp,
+			index: index,
+			ctranspose: fdeg,
+			mul: 1 - (0.2),
+			data: [data],
+			iespeed: dur+env[3],
+			ieamm: ieamm,
+			outbus: bus,
+			group: ~groups[1],
+			env: [env],
+		])]
+		++	[
+			PmonoArtic(*[
+				 \wCarrier,
+				root: ~root.(data),
+				addAction: 1,
+				carPartial: cp,
+				index: index/2,
+				speed: 1,
+				inbus: bus,
+				da: 2,
+				group: ~groups[1],
+				env: [env],
+				amp: amp,
+	])],1)
+};
+
+
+
+
+
 //~pFM.(data: ~data).play
 
 
-~arpFM = {|data|
+~arpFM = {|data, stp = 4|
 	var thing, pArp;
 
 	thing = {|i|
@@ -126,17 +170,17 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 
 	pArp = { | oct = 2, legato = 1 |
 		Pbind(
-			\degree,        Pseq(4.collect{[0, 2, 4, 7].scramble}.flat),
-			\mtranspose,	Pseq(4.collect{[0, 2, 4, 7].scramble}.flat),
-			\tempo,         100/120,
-			\dur, 			Pn(Pseq((8.collect{1/4} ++ 16.collect{1/8}).scramble),1,\step),
+//			\degree,        Pseq(stp.collect{[0, 2, 4, 7].scramble}.flat),
+			//\mtranspose,	Pseq(stp.collect{[0, 2, 4, 7].scramble}.flat),
+			\dur, 			Pn(Pseq(((stp*2).collect{1/stp} ++ (stp*4).collect{1/(stp*2)}).scramble),inf,\step),
 			\octave,		oct,
-			\scale, 		~scaleBuilder.(data),//[0, 2, 3, 5, 7, 9, 10],
-			\root,          ~root.(data),
+			//\scale, 		~scaleBuilder.(data),//[0, 2, 3, 5, 7, 9, 10],
+			//\root,          ~root.(data),
 			\env,           [[0.01,0.1,0.2,0.5]],
+			\legato, 1/4,
 		);
 	};
-
+/*
 	o = Pfsm([
 		#[3,4,5,6,7], // entry states
 
@@ -145,7 +189,7 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 		#[1, 1, 3, 1, 1, 1, 1, 4],
 
 		//e2 (== state 1)
-		Pchain(thing.(0),pArp.(5,2)),
+		Pchain(thing.(0),pArp.(7,2)),
 		#[0, 1],
 
 		//e3 (== state 2)
@@ -153,11 +197,11 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 		#[0, 1, 2, 2, 2, 2, 3, 3, 3, 3],
 
 		//e4 (== state 3)
-		Pchain(thing.(10),pArp.(5,2)),
+		Pchain(thing.(10),pArp.(4,2)),
 		#[4, 4, 4, 6, 6],
 
 		//e5 (== state 4)
-		Pchain(thing.(0.5),pArp.(5,2)),
+		Pchain(thing.(0.5),pArp.(3,2)),
 		#[2, 3],
 
 		//e6 (== state 5)
@@ -165,7 +209,7 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 		#[0, 2, 4, 5, 5, 5, 5, 5, 5, 5],
 
 		//e7 (== state 6)
-		Pchain(thing.(3),pArp.(5,2)),
+		Pchain(thing.(3),pArp.(6,2)),
 		#[4, 4, 4, 4, 6, 6, 6, 7, 7, 7],
 
 		//e8 (== state 7)
@@ -175,6 +219,8 @@ SynthDef("wModulator", { arg outbus = 2, freq, modPartial = 1, index = 3, mul = 
 		// terminal state
 		nil, nil
 	]);
+	*/
+	pArp.(4);
 };
 
 /*

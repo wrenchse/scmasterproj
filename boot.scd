@@ -156,9 +156,10 @@ s.waitForBoot{
 
 	// MASTER OUTPUT
 
-	SynthDef(\ambiOut, {|out, dry = 1.0, wet = 0.0, in = 10 |
-		var o = In.ar(in, 2);
+	SynthDef(\ambiOut, {|out= 0, dry = 1.0, wet = 0.0, in = 10 |
+		var o = In.ar(0, 2);
 
+		FoaDecode.ar(o,~decoder);
 		Out.ar(out, FoaDecode.ar(o, ~decoder));
 	}).add;
 };

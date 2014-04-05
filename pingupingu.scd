@@ -74,7 +74,7 @@ SynthDef(\pinguPingu, { |
 
 	sound = sound + chorus + delay;
 
-DetectSilence.ar(sound, doneAction:2);
+//DetectSilence.ar(sound, doneAction:2);
 //	-	-	-	-	-	-	-	-	-	OUTPUT MODULE
 	Out.ar(~reverbSend,sound * revAmm/2);
 	Out.ar(0,

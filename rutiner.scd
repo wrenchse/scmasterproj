@@ -6,11 +6,11 @@
 //				//			  A.K.A THE BACHINATOR			//
 //				//			(c)JONTE KJELLBERGSSON			//
 //				//	-	-	-	-	-	-	-	-	-	-	//
-~melodyNotes2 = { | seed = 100 |
+~melodyNotes2 = { | data = #[1,1] |
 	var newNote, 	noteOut = 0, 	forceDown = 0, 	noDownJump = 0, 	up, 	down;
 
 //	-	-	-	-	-	-	UP
-	thisThread.randSeed = seed;
+		thisThread.randSeed= (data.round(0.01).sum*100);
 
 	up = {
 		noDownJump = 0;
@@ -44,7 +44,7 @@
 				down.value
 			}
 	);
-		noteOut;
+		0.9.coin.if({noteOut},{\rest});
 	};
 
 };
@@ -96,8 +96,10 @@
 
 });
 
-~melodyDur = { | i |
+~melodyDur = { | data=#[1,1] |
 	var picker = 0,	 barR = 0, 		ev, newDur, 		durOut;
+
+	thisThread.randSeed= (data.round(0.01).sum*100);
 
 	newDur = 100.collect( {| i |
 		durOut = switch (picker,
@@ -134,6 +136,7 @@
 
 thisThread.randSeed = ~seed;
 
+
 ~melodi = 	Pbind(
 	\instrument, 	\pinguPingu, 			//Pstutter(5,Pseq(.[\restrument,\default],inf)),
 	\dur, 			Pseq(~melodyDur.value.flat),
@@ -142,9 +145,9 @@ thisThread.randSeed = ~seed;
 	\octave,		6,
 	\amp,			0.2,
 	\gate, 			1,
-//	\detune, [1,7,-5,-2,-4],
+	//	\detune, [1,7,-5,-2,-4],
 	\filtr,			Pwhite(1000,3000),
-		\pan, 			Pwhite(-0.1,0.1,inf),
+	\pan, 			Pwhite(-0.1,0.1,inf),
 	*~pinguPresets.at(3),
 );
 
@@ -211,6 +214,8 @@ thisThread.randSeed = ~seed;
 );
 
 
+
+// NOTES TO METAPHYSICAL
 ~metaNotes = { | data  |
 	6.collect {|i|
 		LinLin.kr(data[i],data.sum/7,1.0,0,24).round
@@ -219,33 +224,77 @@ thisThread.randSeed = ~seed;
 
 
 
+// TONALITY PATTERN
+~tn = {|data, trans = 0|
+	Pbind(
+		\scale,~scaleBuilder.(data),
+		\root,~root.(data),
+		\mtranspose, trans,
+	)
+};
+
+
+// CHORD AND ARPEGGIOBUILDER
+~chord3 = {|i = 1, clr=0, clr2=0, inv=0, arp=0, rpt=1|
+	var chrds, pChords, tri;
+
+	tri =
+	[0,2,4] ++
+	(clr!=0).if({ [clr-1] }) ++
+	(clr2>0).if({[ clr2-1 ]});
+
+	if(inv > 0 , { // INVERSIONS
+		tri[inv%tri.size]=tri[inv%tri.size]-7
+	});
+
+	if(i.size>0,{ // TRANSPOSE using +10
+		i.collect{|item,o|
+			if(i[o]>9,{i[o]=(i[o]%10)+7})
+		};
+	});
+
+	(arp>0).if(
+		{ tri = Pseq(4.collect{tri}.flatten,inf)+Pstutter(4*rpt,Pseq(i-1,inf)) },
+		{ tri = Pseq([tri]+(i-1))  }
+	);
+
+	Pbind(
+		\degree,	tri,
+	)
+};
+
+
+//~chord3.([1,2,4,5],8,arp:1,rpt:2).play
+//~chord3.([1],8,arp:1,rpt:1).play
 
 
 
 
 
 
+~melodi = { |data,off=0,dur=2,tmp=1|
+	var funki;
+
+	funki = off.collect{|item, i|
+
+		Psync(
+			Pbind(
+				\dur, 			Pseq(~melodyDur.(data).flat*tmp,dur*4,off[i]),
+				\degree, 		Pser(~melodyNotes2.(data),dur*4,off[i]),
+				\amp,			0.2,
+			),
+			2,
+			dur
+		)
+	};
+	Pseq(funki);
+};
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//Pchain(Pbind(\instrument, \pinguPingu),~melodi.(~data,[0],8)).play
 
 
 

@@ -41,8 +41,9 @@ Pdsfm - för polymetriska grejer. fas tjohej, olika fraser.
 
 (
 ~data = 7.collect( { 1-0.2.rand } );
-//Pchain(	~pFM.(data: ~data, ieamm: 20, fdeg: 0), ~arpFM.(~data) ).play;
-Pchain(	~pDrone2cm.(data: ~data, octave: 2, index: 2, amm: ~data, deg: 0, st: 3), ~arpu.() ).play
+Pchain(	~pFMo.(~data, ieamm: 2, fdeg: 0), ~arpFM.(~data,2), Pstutter(2,~chord3.([1],4,7,rpt:2,arp:1)) ).play;
+//Pchain(	~pFM.(data: ~data, ieamm: 2, fdeg: 0), Pstutter(2,~arpFM.(~data,4)) ).play;
+//Pchain(	~pDrone2cm.(data: ~data, octave: 2, index: 2, amm: ~data, deg: 0, st: 3), ~arpFM.(~data) ).play
 )
 
 s.plotTree
@@ -51,40 +52,25 @@ s.plotTree
 ~chords.play
 
 
-
+~chord3.(1)
 
 (
 ~pFMChords = Pbind(
 	\degree,		#[0, 2, 4, 7],
 	\legato, 		3/4,
 	\amp, 			0.2,
-	\dur, 			Pseq([4,4],inf),
-	\mtranspose, 	Pseq([0,0,2,2,5,5,1,1,7,7,9,9],inf),
-	\octave, 4
+	\dur, 			4,
+	\mtranspose, 	Pseq([0,2,4,7],inf),
+	\octave, 5
 );
 
 
 
-(~pFM.(data: ~data, index: 1, fdeg: 24) <> ~pFMChords).play;
+(~pFMono.(data: ~data, index: 0.2, fdeg: 12) <> Pstutter(2,~pFMChords)).play;
 )
 Pcollect
 ~chords.play
 
-
-~chords = Pbind(
-	\instrument,	\pinguPingu,
-	\degree,		[0, 2, 4, 7],
-	\legato, 		3/4,
-	\amp, 			0.2,
-	\tempo, 		1,
-	\filtr,			Pwhite(200,600),
-	\pan, 			Pn([0.2,-0.2,-0.6,0.6].scramble,inf),
-	\dur, 			Pseq([4],inf),
-	\octave,		4,
-	\mtranspose, 	Pseq([0,2,5,1,7,9]),
-	*~pinguPresets.at(1),
-
-);
 
 
 
