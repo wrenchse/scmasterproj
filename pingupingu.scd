@@ -1,6 +1,5 @@
 
 // ***************************************************************************** //
-(
 
 ~pinguPresets = Dictionary.new;
 ~pinguPresets.put(1, [	\envSynth,	[[2,0.1,0.9,5]],	\envFilter,	[[0.01,5,1,10]], \res,  1, \filtr, 1000, \revAmm, 0.5	 ]  ); // "1".asSymbol
@@ -10,7 +9,7 @@
 
 ~pinguPresets.put(5, [	\envSynth,	[[0.01,0.01,1.5,0.01]],	\envFilter,	[[0,0.0,0.7,0]], \res,  0.3, \filtr, 100, \revAmm, 0.5, \saw0Pulse1, 1	 ]  ); // "1".asSymbol
 ~pinguPresets.put(6, [	\envSynth,	[[0.01,1,0.01,0.1]],	\envFilter,	[[0.005,0.01,0.1,1]], \res,  0.08, \filtr,1000, \saw0Pulse1, 0, \delAmm, 0	 ]  );
-
+~pinguPresets.put(7, [	\envSynth,	[[15,0,1,25]],	\envFilter,	[[0.01,5,1,25]], \res,  1, \revAmm, 0.5	 ]  ); // "1".asSymbol
 
 
 //	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	//
@@ -85,4 +84,33 @@ SynthDef(\pinguPingu, { |
 }).add;
 
 // ***************************************************************************** //
-)
+
+
+~pingM = {|oct = 5, p = 2, a =0.2, lg= 1, flt= 500,mel=0|
+
+	if(mel==1,
+		{lg = Pseq([0,Pseq([1/lg],inf)])}
+	);
+
+	PmonoArtic(
+		\pinguPingu,
+		\legato, 		lg,
+		\amp, 			a,
+		\filtr,			flt,
+		\octave,		oct,
+		\pan, 			Pwhite(-1,1,inf),
+		*~pinguPresets.at(p),
+	)
+};
+
+
+~ping = {|oct = 5, p = 2, lg= 1, a =0.5, flt= 500|
+	Pbind(
+		\instrument,	\pinguPingu,
+		\amp, 			a,
+		\filtr,			flt,
+		\octave,		oct,
+		*~pinguPresets.at(p),
+	)
+};
+

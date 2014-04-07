@@ -4,8 +4,9 @@ s.options.memSize
 //  B O O T --------------------------------------------------------------------- //
 
 ~fftsize=2048;
-~reverbSend 	= Bus.audio(s, 4);
-~resonatorSend	= Bus.audio(s, 4);
+~reverbSend 	= 110;
+~resonatorSend	= 100;
+~ambiBus		= 120;
 
 ~fxG = Group.tail;
 ~sG = Group.new;
@@ -122,9 +123,10 @@ s.waitForBoot{
 		dTime = (48000/(freq+pitches));
 
 		input = Mix.ar(In.ar(in))*0.25;
+		input = HPF.ar(input,300);
 
 		delay = TwoTube.ar(input, LinRand(1,-1),LinLin.kr(fb,0,1,0.95,0.99999) ,dTime/4, dTime/4)*env;
-		delay = FoaPanB.ar(delay,pany);
+		delay = FoaPanB.ar(delay,Saw.ar(1/freq,pi/2));
 
 		Out.ar(~reverbSend, delay*0.5);
 		delay = FoaDecode.ar(delay, ~decoder);
@@ -135,16 +137,16 @@ s.waitForBoot{
 	SynthDef(\samplePlayer, { |
 		out=0, buf = 0, 	rate = 1, at =0.01,
 		rel= 0.1, pos =0, pSpeed = 0, lev = 0.5, datan =#[0,1,0]
-		resSend = 1, revSend = 0.5, gate= 1 |
-		var sample, panT,  amp, sound, curve;
+		resSend = 1, revSend = 0.5, gate= 1, amp=1 |
+		var sample, panT,  sound, curve, ampy;
 
 		curve = EnvGen.kr(Env.circle(LinLin.kr(datan,0.9,1.0,0,1)*2,datan*at,[-5, 0, -5]));
-		sample = PlayBuf.ar(4, buf, BufRateScale.kr(buf)*curve, 1, 0, 1);
+		sample = PlayBuf.ar(2, buf, BufRateScale.kr(buf)*curve, 1, 0, 1);
 		panT= FSinOsc.kr(pSpeed);
-		amp = EnvGen.ar(Env.asr(at, 1, rel), gate, doneAction: 2);
+		ampy = EnvGen.ar(Env.asr(at, amp, rel), gate, doneAction: 2);
 
 
-		sound = Pan2.ar(sample, panT, amp);
+		sound = Pan2.ar(sample, panT, ampy);
 		Out.ar(~reverbSend, sound * revSend);
 		Out.ar(~resonatorSend, (sound * resSend) * (curve/[1,10]));
 		Out.ar(out, sound);
@@ -157,11 +159,13 @@ s.waitForBoot{
 	// MASTER OUTPUT
 
 	SynthDef(\ambiOut, {|out= 0, dry = 1.0, wet = 0.0, in = 10 |
-		var o = In.ar(0, 2);
+		var o = In.ar(~ambiBus, 4);
 
-		FoaDecode.ar(o,~decoder);
-		Out.ar(out, FoaDecode.ar(o, ~decoder));
+		o = FoaDecode.ar(o,~decoder);
+		o = o * 1.5;
+		Out.ar(out, o);
 	}).add;
+
 };
 )
 

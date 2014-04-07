@@ -196,9 +196,10 @@ SynthDef(\mixer, {|
 						Pmono(
 							\nojs,
 							\out, layA+i,
-							\amp, 0.5,
+							\amp, 0.1,
 							\env, [curves[i+5]],
-							\cykel, curlen[i+5]*len,
+							\cykel, curlen[i+5]*len*10,
+							\freq, 5000,
 						)
 					}
 				)
@@ -221,10 +222,11 @@ SynthDef(\mixer, {|
 
 
 
+~playMETAFYX = {
+	~pMetafyx.(data: ~data, vol: 0.5, mix: -1, len: 10,  smear: 0.7, lpf: 10000, resS: 1, dist: 2, dmix: -1);
+};
 
-
-
-
+//~pMetafyx.(data: ~data, vol: 0.5, mix: -1, len: 10,  smear: 0.7, lpf: 10000, resS: 1, dist: 2, dmix: -1).play;
 
 
 /*

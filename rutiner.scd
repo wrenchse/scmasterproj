@@ -9,8 +9,8 @@
 ~melodyNotes2 = { | data = #[1,1] |
 	var newNote, 	noteOut = 0, 	forceDown = 0, 	noDownJump = 0, 	up, 	down;
 
-//	-	-	-	-	-	-	UP
-		thisThread.randSeed= (data.round(0.01).sum*100);
+	//	-	-	-	-	-	-	UP
+	thisThread.randSeed= (data.round(0.01).sum*100);
 
 	up = {
 		noDownJump = 0;
@@ -23,7 +23,7 @@
 			}
 	)};
 
-//	-	-	-	-	-	-	DOWN
+	//	-	-	-	-	-	-	DOWN
 	down = {
 		forceDown = 0;
 		if((noDownJump	+ 0.33).coin,
@@ -35,7 +35,7 @@
 			}
 	)};
 
-//	-	-	-	-	-	-	-	-	-	PICK
+	//	-	-	-	-	-	-	-	-	-	PICK
 	newNote = 100.collect{ |i|
 		if (LinLin.kr(forceDown + noteOut,-14, 14,1,0).coin,
 			{
@@ -43,7 +43,7 @@
 			},{
 				down.value
 			}
-	);
+		);
 		0.9.coin.if({noteOut},{\rest});
 	};
 
@@ -53,7 +53,7 @@
 ~melodyNotes = Prout({ | ev |
 	var newNote, 	noteOut = 0, 	forceDown = 0, 	noDownJump = 0, 	up, 	down;
 
-//	-	-	-	-	-	-	UP
+	//	-	-	-	-	-	-	UP
 	up = {
 		noDownJump = 0;
 		if(0.33.coin,
@@ -65,7 +65,7 @@
 			}
 	)};
 
-//	-	-	-	-	-	-	DOWN
+	//	-	-	-	-	-	-	DOWN
 	down = {
 		forceDown = 0;
 		if((noDownJump	+ 0.33).coin,
@@ -77,7 +77,7 @@
 			}
 	)};
 
-//	-	-	-	-	-	-	-	-	-	PICK
+	//	-	-	-	-	-	-	-	-	-	PICK
 	newNote = {
 		if (LinLin.kr(forceDown + noteOut,-14, 14,1,0).coin,
 			{
@@ -132,9 +132,6 @@
 // ***************************************************************************** //
 
 //	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	*	//
-
-
-thisThread.randSeed = ~seed;
 
 
 ~melodi = 	Pbind(
@@ -225,10 +222,10 @@ thisThread.randSeed = ~seed;
 
 
 // TONALITY PATTERN
-~tn = {|data, trans = 0|
+~tn = {|trans = 0|
 	Pbind(
-		\scale,~scaleBuilder.(data),
-		\root,~root.(data),
+		\scale,~scaleBuilder.(~data),
+		\root,~root.(),
 		\mtranspose, trans,
 	)
 };
@@ -272,43 +269,23 @@ thisThread.randSeed = ~seed;
 
 
 
-~melodi = { |data,off=0,dur=2,tmp=1|
+~melodi = { |data,off=0,dur=32,del=0,tmp=1|
 	var funki;
 
 	funki = off.collect{|item, i|
 
 		Psync(
 			Pbind(
-				\dur, 			Pseq(~melodyDur.(data).flat*tmp,dur*4,off[i]),
-				\degree, 		Pser(~melodyNotes2.(data),dur*4,off[i]),
-				\amp,			0.2,
+				\dur, 		Pseq(~melodyDur.(data).flat*tmp,dur*4,off[i]),
+				\degree, 	Pser(~melodyNotes2.(data),dur*4,off[i]),
+
 			),
-			2,
+			4,
 			dur
 		)
 	};
 	Pseq(funki);
 };
-
-
-
-
-
-//Pchain(Pbind(\instrument, \pinguPingu),~melodi.(~data,[0],8)).play
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /*
@@ -320,15 +297,15 @@ toner = 10.collect{ |i| ~melodyNotes2.().[i] };
 length= 10.collect{ |i| ~melodyDur.().flatten[i] };
 
 Ppar( 4.collect{
-	arg i;
+arg i;
 Pbind(*[
-	instrument: \default, //\droneWrench,
-		dur: 			Pseq(length,inf),
+instrument: \default, //\droneWrench,
+dur: 			Pseq(length,inf),
 //		dur: 10-i,
-		stretch: 2/(i+1.2),
-		degree: Pseq(toner,inf),
-		octave: 4,
-		scale: ~scaleBuilder.value,
+stretch: 2/(i+1.2),
+degree: Pseq(toner,inf),
+octave: 4,
+scale: ~scaleBuilder.value,
 ])
 }).play
 )*/
@@ -337,14 +314,14 @@ Pbind(*[
 (
 ~melodi2 = {	arg number = 1, dur = 0.2;
 Pbind(
-	\dur, 			dur,
-	\scale, 		~scaleBuilder.(~data),
-	\degree,        Pseq((0..7),1),
-	\octave,		number,
-	\amp,			0.2,
-	\root,          ~root.value,
-	\gate, 			1,
-	\filtr,			Pwhite(1000,3000),
-	\pan, 			Pwhite(-0.1,0.1,inf),
+\dur, 			dur,
+\scale, 		~scaleBuilder.(~data),
+\degree,        Pseq((0..7),1),
+\octave,		number,
+\amp,			0.2,
+\root,          ~root.value,
+\gate, 			1,
+\filtr,			Pwhite(1000,3000),
+\pan, 			Pwhite(-0.1,0.1,inf),
 )};
 )*/
