@@ -38,16 +38,76 @@ Buffer.freeAll
 	Pbind(*[
 		instrument: \reson2,
 		octave: 	octave,
-		datan:		[datan],
+		datan:		[~data],
 		group:		~groups[6],
 		fb: 0.9,
 	])
 }
 )
 
+
+
+(
+~playSAMPLER = {|d,le=60,dec=2|
+	var which, second, sampler, chords;
+
+	which = LinLin.kr(~root.(),0,11,0,6).round;
+	second = (which+~root.())%7;
+
+	sampler = Pspawn(
+		Pbind(
+			\pattern, { Psync( ~sampler.([which,second].choose) <> (dur: le) ,4,le) },
+			\delta, le/3,
+			\method, \par,
+		)
+	);
+
+	chords = Pspawn(
+		Pbind(
+			\pattern, { Psync( ~resonate.() <> ~chordSeq.(le/3,Pwhite(0.2,1.2)) <>~tn.(0) ,4,le*4 )  },
+		\delta, le/3,
+		\method, \par,
+	)
+	);
+
+	Ppar([chords,sampler]);
+};
+)
+
+
+~playSAMPLER.().play
+
+
+LinLin.kr(~root.(),0,11,0,6).round;
+
+~sampler.(1).play
+
+
+
+
+6%7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ~data = 7.collect( { 1-0.2.rand } );
 
-(~sampler.(3, datan: ~data)<>(dur:100)).play
+(~sampler.(1, datan: ~data)<>(dur:100)).play
 (~resonate.(~data)<>~chord3.(1,7)<>~arpFM.()<>~tn.(~data)).play
 
 (~resonate.(~data)<>~chordSeq.(10,0.5)<>~tn.(~data,0)).play
@@ -58,19 +118,27 @@ Buffer.freeAll
 )
 
 ~testArpFM = {|st=4,stutter=2,i=1|
-	~pFMo.(~data,ieamm:0.2)<>Pstutter(stutter,~chord3.([1],7,arp:1))<>~arpFM.(st,i)
+	~pFMo.(~data,ieamm:0.2)<>Pstutter(stutter,x<>~chord3.([1],7,arp:1))<>~arpFM.(st,i)
 }
 
 
 ~testArpFM.(3).play
+
+
+
+
+
+
+
+
 
 (
 ~parts3 = {|d,le=16,dec=2|
 	Pspawn(
 		Pbind(
 			\pattern, { Psync(~testArpFM.([1,2,3].choose,[1,2].choose,[1,2,3].choose),4,le*dec) },
-			    \delta, le,
-			    \method, Pseq([\par,Prand([\par,\wait],1)],inf),
+			\delta, le,
+			\method, Pseq([\par,Prand([\par,\wait],1)],inf),
 		)
 	)
 };

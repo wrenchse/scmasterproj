@@ -288,6 +288,74 @@
 };
 
 
+
+~chordSeq = {|dur = 2, leg =1|
+	var chrds, pChords;
+
+
+	pChords = {|degs|
+		Psync(
+			Pbind(
+				\degree,		degs.postln,
+				\legato, 		leg,
+				\amp, 			0.6,
+				\octave, 5,
+				\dur, dur,
+		),4,dur
+		)
+	};
+
+
+	o = Pfsm([
+		#[1], // entry states
+
+		pChords.([0,0,0]),
+		#[1],
+
+		// I
+		pChords.([0,2,4]),
+		#[1,2,2,4,9,9,9],
+
+		// II
+		pChords.([1,3,5]),
+		#[3,5,1],
+
+		// III
+		pChords.([2,4,6]),
+		#[4],
+
+		// IV
+		pChords.([3,5,7]),
+		#[5,2],
+
+		// V
+		pChords.([4,6,8]),
+		#[1,6,3],
+
+		// VI
+		pChords.([5,7,9]),
+		#[2],
+
+		// VII
+		pChords.([6,8,10]),
+		#[8],
+
+		// VIII
+		pChords.([7,9,11]),
+		#[1],
+
+		// Vm
+		pChords.(#[0,2,-2]),
+		#[2, 5],
+
+
+		// terminal state
+		nil, nil
+	]);
+	o;
+};
+
+
 /*
 (
 var toner, length;

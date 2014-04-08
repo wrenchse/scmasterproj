@@ -4,6 +4,7 @@ s.plotTree;
 (
 s.freeAll;
 ~seed = 12;
+~snd = NetAddr("127.0.0.1", NetAddr.langPort);
 "boot.scd".resolveRelative.load;
 "pingupingu.scd".resolveRelative.load;
 "scalebuilder.scd".resolveRelative.load;
@@ -37,8 +38,23 @@ p = OSCFunc({| msg |
 
 
 
+OSCFunc
+
+ NetAddr("127.0.0.1", NetAddr.langPort).
 
 
+x = Pbind(
+	\sendings, Pfunc({|ev| ~snd.sendMsg("/fx", ev.degree ); ev.instrument.postln }),
+)
+
+
+
+
+x.play
+
+
+
+OSCFunc.newMatching({|msg, time, addr, recvPort| msg.postln}, '/chat', n); // path matching
 
 
 
