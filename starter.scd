@@ -4,7 +4,8 @@ s.plotTree;
 (
 s.freeAll;
 ~seed = 12;
-~snd = NetAddr("127.0.0.1", NetAddr.langPort);
+~snd = NetAddr("127.0.0.1", 9000);//NetAddr.langPort);
+~sndThings = Array.fill(20, {Pseq([\on,\off],inf).asStream});
 "boot.scd".resolveRelative.load;
 "pingupingu.scd".resolveRelative.load;
 "scalebuilder.scd".resolveRelative.load;
@@ -20,8 +21,10 @@ p = ~pMetafyx.(data: ~data, vol: 0.5, mix: -1, len: 10,  smear: 0.7, lpf: 10000,
 
 
 
-(
 
+
+(
+~oscTHINGS = {
 o = OSCFunc({| msg |
 	Synth(\snare);
 		~data = msg;
@@ -34,29 +37,37 @@ p = OSCFunc({| msg |
 	~playIt.stop;
 }, '/gui'); // create the OSCresponderNode
 
+c = OSCFunc.newMatching({|msg| ~snd.sendMsg("/rms", msg[3].postln)}, '/peakrms', n); // path matching
+}
 )
 
-
+~oscTHINGS.()
 
 OSCFunc
 
  NetAddr("127.0.0.1", NetAddr.langPort).
 
 
-x = Pbind(
-	\sendings, Pfunc({|ev| ~snd.sendMsg("/fx", ev.degree ); ev.instrument.postln }),
+
+
+
+
+
+~sendOSC = Pbind(
+	\sendings, Pfunc({|ev| ~snd.sendMsg("/chat", ev.degree, ~sndThings[ev.degree].next ) }),
 )
 
 
+SendPeakRMS
 
 
 x.play
 
 
 
-OSCFunc.newMatching({|msg, time, addr, recvPort| msg.postln}, '/chat', n); // path matching
-
-
+x = OSCFunc.newMatching({|msg, time, addr, recvPort| msg.postln}, '/rms', n); // path matching
+c = OSCFunc.newMatching({|msg| ~snd.sendMsg("/rms", msg[3].postln)}, '/peakrms', n); // path matching
+c.free
 
 "rutiner.scd".resolveRelative.load;
 

@@ -231,6 +231,15 @@
 };
 
 
+// OSC SENDER
+
+~sendOSC = Pbind(
+	\sendings, Pfunc({|ev| ~snd.sendMsg("/fx", ev.degree, ~sndThings[ev.degree].next ) }),
+);
+
+
+
+
 // CHORD AND ARPEGGIOBUILDER
 ~chord3 = {|i = 1, clr=0, clr2=0, inv=0, arp=0, rpt=1|
 	var chrds, pChords, tri;

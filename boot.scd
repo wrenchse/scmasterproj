@@ -163,6 +163,7 @@ s.waitForBoot{
 
 		o = FoaDecode.ar(o,~decoder);
 		o = o * 1.5;
+		SendPeakRMS.ar(o,60,10, cmdName: '/peakrms');
 		Out.ar(out, o);
 	}).add;
 
