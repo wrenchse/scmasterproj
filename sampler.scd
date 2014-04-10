@@ -1,17 +1,6 @@
 
-Buffer.freeAll
 
-(
-~buffers = Array.fill(7);
-~buffers[0] = (Buffer.read(s, "vass4.wav".resolveRelative));
-~buffers[1] = (Buffer.read(s, "regn2.aiff".resolveRelative));
-~buffers[2] = (Buffer.read(s, "strossel1.wav".resolveRelative));
-~buffers[3] = (Buffer.read(s, "kottekras.wav".resolveRelative));
-~buffers[4] = (Buffer.read(s, "tandstick.wav".resolveRelative));
-~buffers[5] = (Buffer.read(s, "pappersriv.wav".resolveRelative));
-~buffers[6] = (Buffer.read(s, "tunna1.wav".resolveRelative));
-)
-(
+
 ~buf = Array.fill(~buffers.size);
 ~buf[0] = [\buf, ~buffers[0], \amp, 2];
 ~buf[1] = [\buf, ~buffers[1], \amp, 1];
@@ -42,13 +31,11 @@ Buffer.freeAll
 		group:		~groups[6],
 		fb: 0.9,
 	])
-}
-)
+};
 
 
 
-(
-~playSAMPLER = {|d,le=60,dec=2|
+~playSAMPLER = {|out,le=60,dec=2|
 	var which, second, sampler, chords;
 
 	which = LinLin.kr(~root.(),0,11,0,6).round;
@@ -65,16 +52,17 @@ Buffer.freeAll
 	chords = Pspawn(
 		Pbind(
 			\pattern, { Psync( ~resonate.() <> ~chordSeq.(le/3,Pwhite(0.2,1.2)) <>~tn.(0) ,4,le*4 )  },
-		\delta, le/3,
+		\delta, le*4,
 		\method, \par,
 	)
 	);
 
-	Ppar([chords,sampler]);
+	Ppar([chords,sampler])<>(out: out);
 };
-)
 
 
+
+/*
 ~playSAMPLER.().play
 
 
@@ -175,3 +163,4 @@ LinLin.kr(~root.(),0,11,0,6).round;
 
 
 Env.circle(LinLin.kr(~data,0.8,1.0,0,1),~data,[-5, 0, -5]).plot;
+*/

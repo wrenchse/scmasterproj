@@ -16,7 +16,7 @@ s.options.sampleRate	= 48000;
 s.options.memSize		= 5000*1024;
 
 s.waitForBoot{
-
+	Buffer.freeAll;
 	{
 		// INITIATE REVERB IMPULSE RESPONSE
 
@@ -36,6 +36,22 @@ s.waitForBoot{
 	}.fork;
 
 	s.sync;
+
+
+
+	~buffers = Array.fill(7);
+	~buffers[0] = (Buffer.read(s, "vass4.wav".resolveRelative));
+	~buffers[1] = (Buffer.read(s, "regn2.aiff".resolveRelative));
+	~buffers[2] = (Buffer.read(s, "strossel1.wav".resolveRelative));
+	~buffers[3] = (Buffer.read(s, "kottekras.wav".resolveRelative));
+	~buffers[4] = (Buffer.read(s, "tandstick.wav".resolveRelative));
+	~buffers[5] = (Buffer.read(s, "pappersriv.wav".resolveRelative));
+	~buffers[6] = (Buffer.read(s, "tunna1.wav".resolveRelative));
+
+
+	s.sync;
+
+
 
 	// 			SPECIFY DECODER
 
@@ -130,7 +146,7 @@ s.waitForBoot{
 
 		Out.ar(~reverbSend, delay*0.5);
 		delay = FoaDecode.ar(delay, ~decoder);
-		Out.ar(0,delay);
+		Out.ar(out,delay);
 	}).add;
 
 
@@ -167,6 +183,28 @@ s.waitForBoot{
 		Out.ar(out, o);
 	}).add;
 
+
+	s.sync;
+
+
+
+	~metaPlayer = {|out=0|
+		var picker;
+		picker = ~root.()%4;
+
+		[
+			~tn.()<>~playMETAFYX.(out),
+			~tn.()<>~playDRONEFM.(out),
+			~tn.()<>~playSAMPLER.(out),
+			~tn.()<>~playDRONE2.(out)
+		].at(picker);
+	};
+
+
+	s.sync;
+
+	~reverb = Synth(\wrenchVerb,[\out,~ambiBus], target: ~groups[7],addAction:0);
+	~output = Synth(\ambiOut, target: ~groups[7],addAction:1);
+
 };
 )
-

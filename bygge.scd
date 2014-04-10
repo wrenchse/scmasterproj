@@ -590,21 +590,21 @@ s.plotTree
 
 
 ~metaPlayer = {
-	var picker;
-	picker = ~root.()%5;
+	var picker, out=0;
+	picker = ~root.()%4;
+
 
 	[
-		~playMETAFYX.(),
-		~playDRONEFM.(),
-		\drone2,
-		~playDRONE2.(0),
-		~testArpFM.(3)
+		~playMETAFYX.(out),
+		~playDRONEFM.(out),
+		~playSAMPLER.(out),
+		~playDRONE2.(out)
 	].at(picker);
-}
+};
 
 
 
-(
+
 ~data = 7.collect( { 1-0.2.rand } );
 //~root.(~data)
 ~playIt = ~metaPlayer.().play
@@ -622,8 +622,31 @@ Synth(\ambiOut, target: ~groups[7],addAction:1);
 ~reverbSend
 
 
+(~sendOSC<>~tn.()<>~playMETAFYX.(0)).play
+(~sendOSC<>~tn.()<>~playDRONEFM.(0)).play
+(~tn.()<>~playSAMPLER.(0)).play
+(~sendOSCA<>~tn.()<>~playDRONE2.(0)).play
 
 
+~sendOSC = Pbind(
+	\sendings, Pfunc({|ev| ~snd.sendMsg("/fx", ev.degree, ~sndThings[ev.degree].next ) }),
+);
+
+~sendOSCA = Pbind(
+	\sendings, Pfunc({|ev| ~snd.sendMsg("/fx", ev.octave, ~sndThings[ev.octave].next ) }),
+);
+
+
+
+~metaPlayer.().play
+
+
+x = OSCFunc.newMatching({|msg, time, addr, recvPort| msg.postln}, '/fx', n); // path matching
+
+
+~sndOSC
+
+s.plotTree
 
 
 

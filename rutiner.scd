@@ -231,11 +231,35 @@
 };
 
 
-// OSC SENDER
+// OSC
 
 ~sendOSC = Pbind(
 	\sendings, Pfunc({|ev| ~snd.sendMsg("/fx", ev.degree, ~sndThings[ev.degree].next ) }),
 );
+
+
+~oscTHINGS = {
+	o = OSCFunc({| msg |
+		Synth(\snare);
+		~data = msg;
+		~data.removeAt(0);
+		~data2 = ~data;
+		~data = 1-abs((1-~data));
+
+		~snd.sendMsg("/face", ~root.().asString );
+
+		~playIt =  ~metaPlayer.().play;
+	}, '/start'); // create the OSCresponderNode
+
+	p = OSCFunc({| msg |
+		Synth(\kick);
+		~playIt.stop;
+	}, '/gui'); // create the OSCresponderNode
+
+	c = OSCFunc.newMatching({|msg| ~snd.sendMsg("/rms", msg[3].postln)}, '/peakrms', n); // path matching
+};
+
+
 
 
 
@@ -310,7 +334,7 @@
 				\amp, 			0.6,
 				\octave, 5,
 				\dur, dur,
-		),4,dur
+			),4,dur
 		)
 	};
 

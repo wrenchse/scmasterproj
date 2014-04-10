@@ -11,7 +11,10 @@ s.freeAll;
 "scalebuilder.scd".resolveRelative.load;
 "rutiner.scd".resolveRelative.load;
 "fm.scd".resolveRelative.load;
+"Drone4.scd".resolveRelative.load;
 "metafys.scd".resolveRelative.load;
+"sampler.scd".resolveRelative.load;
+~oscTHINGS.();
 )
 
 
@@ -38,7 +41,7 @@ p = OSCFunc({| msg |
 }, '/gui'); // create the OSCresponderNode
 
 c = OSCFunc.newMatching({|msg| ~snd.sendMsg("/rms", msg[3].postln)}, '/peakrms', n); // path matching
-}
+};
 )
 
 ~oscTHINGS.()
@@ -56,6 +59,9 @@ OSCFunc
 ~sendOSC = Pbind(
 	\sendings, Pfunc({|ev| ~snd.sendMsg("/chat", ev.degree, ~sndThings[ev.degree].next ) }),
 )
+
+
+
 
 
 SendPeakRMS

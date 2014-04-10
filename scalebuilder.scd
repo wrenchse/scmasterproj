@@ -15,7 +15,7 @@
 	// ROTERA OM MER ÄN PHI
 	varden = ~data;
 	varden.do{ |i|
-		if (~data[i] > 1, { rota = rota + 1 })
+		if (~data2[i] > 1, { rota = rota + 1 })
 	};
 	varden = varden.rotate(rota);
 
@@ -49,8 +49,9 @@
 )
 
 
-
-
+//~data = 7.collect( { 1+0.3.rand } );
+//~data2 = ~data;
+//1-abs((1-~data)); // normaliserande så att plusvärden inte hamnar över 1.
 
 
 

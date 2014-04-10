@@ -212,6 +212,7 @@ SynthDef(\mixer, {|
 					\fb, 0.9,
 					\scale, ~scaleBuilder.(data),
 					\root, ~root.(data),
+					\out, out,
 				)
 			]
 		)
@@ -222,8 +223,8 @@ SynthDef(\mixer, {|
 
 
 
-~playMETAFYX = {
-	~pMetafyx.(data: ~data, vol: 0.5, mix: -1, len: 10,  smear: 0.7, lpf: 10000, resS: 1, dist: 2, dmix: -1);
+~playMETAFYX = {|out|
+	~pMetafyx.(out: out, data: ~data, vol: 0.5, mix: -1, len: 10,  smear: 0.7, lpf: 10000, resS: 1, dist: 2, dmix: -1);
 };
 
 //~pMetafyx.(data: ~data, vol: 0.5, mix: -1, len: 10,  smear: 0.7, lpf: 10000, resS: 1, dist: 2, dmix: -1).play;
